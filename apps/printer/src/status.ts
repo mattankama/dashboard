@@ -1,13 +1,13 @@
 // `npm run status`: a plain-English health check. It only looks; it never prints,
 // emails, marks anything done or notifies.
 import type { Item } from "./api.ts";
+import { LABEL } from "./launchd.ts";
 import { missingForRealRun, type Config } from "./config.ts";
 import type { PrinterStatus } from "./printer.ts";
 import type { Runner } from "./run.ts";
 import { isoWeek, mostRecentTarget } from "./schedule.ts";
 import type { State } from "./state.ts";
 
-export const LABEL = "org.dashboard.weekly";
 
 export interface StatusInfo {
   now: Date;

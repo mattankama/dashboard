@@ -12,7 +12,7 @@ Never load launchd, deploy, print or email in these tasks.
   - It has no side effects. Its formatting is pure and tested.
   - `--mark-done` marks this week done (for `install.sh`) and is tested.
   - Log lines echo to the terminal only when stdout is one, so launchd's own log stays for crashes.
-- [ ] **Task 2: launchd job and installer**
+- [x] **Task 2: launchd job and installer**
   - `src/launchd.ts` renders the job file (XML-escaped; unit-tested).
   - `install.sh [--dry-run] [--print-this-week]` and `uninstall.sh`.
   - Verify: `./install.sh --dry-run` passes `plutil -lint`; `bash -n` on both scripts. Nothing is loaded.
