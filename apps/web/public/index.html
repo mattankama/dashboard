@@ -23,7 +23,15 @@
       </main>
 
       <footer class="bar">
-        <p id="notice" class="notice" role="alert" hidden></p>
+        <div role="status">
+          <div id="undo" class="undo" hidden>
+            <span>Archived</span>
+            <button id="undo-button" class="word" type="button">Undo</button>
+          </div>
+        </div>
+        <div role="alert">
+          <p id="notice" class="notice" hidden></p>
+        </div>
         <form id="add" class="add" autocomplete="off">
           <label for="new-item" class="visually-hidden">New item</label>
           <textarea id="new-item" name="text" rows="1" placeholder="Worth remembering…"></textarea>

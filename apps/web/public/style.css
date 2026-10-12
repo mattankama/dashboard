@@ -20,6 +20,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 html {
   background: var(--desk);
   -webkit-text-size-adjust: 100%;
@@ -62,6 +64,7 @@ h1 {
 /* The dot grid. Dots sit at each cell's centre column, on the text baseline. */
 .sheet {
   flex: 1;
+  overflow-x: clip; /* an item swiped off the page disappears at its edge */
   padding: 0 var(--gutter) calc(2 * var(--row));
   background-image: radial-gradient(circle at center, var(--dot) 0 1.1px, transparent 1.6px);
   background-size: var(--row) var(--row);
@@ -80,6 +83,83 @@ h1 {
 .item {
   display: grid;
   grid-template-columns: var(--row) 1fr;
+  touch-action: pan-y pinch-zoom; /* the page still scrolls and zooms; sideways drags swipe */
+}
+
+/* Each item is a button that opens it for editing. Padding with matching negative
+   margins gives it a finger-sized tap area without moving it off the grid. */
+.open {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: -0.75rem 0;
+  padding: 0.75rem 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.editor { min-width: 0; }
+
+.edit-text {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--honey);
+  font: inherit;
+  line-height: var(--row);
+  resize: none;
+  overflow: hidden;
+}
+
+/* The caret and the words underneath show which item is being edited. */
+.edit-text:focus { outline: none; }
+
+.edit-words {
+  display: flex;
+  gap: 2rem;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  line-height: var(--row);
+}
+
+/* Quiet word buttons: Pin, Archive, Undo, Try again. */
+.word {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-muted);
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.word::after {
+  content: "";
+  position: absolute;
+  inset: -0.625rem -0.5rem;
+}
+
+.word:hover { color: var(--ink); }
+
+.undo .word,
+.notice .word {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 /* Each item's mark covers the dot it sits on, like a dash drawn over a journal dot. */
@@ -139,7 +219,8 @@ h1 {
 
 .bar:focus-within { border-top-color: color-mix(in srgb, var(--honey) 55%, var(--rule)); }
 
-.notice {
+.notice,
+.undo {
   margin: 0;
   padding: 0.75rem var(--gutter) 0 calc(var(--gutter) + var(--row));
   font-family: var(--sans);
@@ -147,15 +228,11 @@ h1 {
   line-height: 1.4;
 }
 
-.retry {
-  padding: 0.5rem 0.25rem;
-  border: 0;
-  background: none;
-  color: var(--honey);
-  font: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  cursor: pointer;
+.undo {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--ink-muted);
 }
 
 .add {
@@ -209,7 +286,8 @@ h1 {
 }
 
 .save:focus-visible,
-.retry:focus-visible {
+.open:focus-visible,
+.word:focus-visible {
   outline: 2px solid var(--honey);
   outline-offset: 2px;
 }

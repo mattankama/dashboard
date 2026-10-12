@@ -23,6 +23,7 @@ describe("routing", () => {
     const assets = [
       ["/app.js", "javascript"],
       ["/lib.js", "javascript"],
+      ["/swipe.js", "javascript"],
       ["/style.css", "text/css"],
     ];
     for (const [path, type] of assets) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareItems, formatDay, isoDay } from "../public/lib.js";
+import { compareItems, editPatch, formatDay, isoDay, swipeOutcome } from "../public/lib.js";
 
 function item(id: string, pinned: boolean, createdAt: string) {
   return { id, text: id, category: null, pinned, createdAt, updatedAt: createdAt, archivedAt: null };
@@ -30,5 +30,47 @@ describe("formatDay", () => {
 describe("isoDay", () => {
   it("gives the local calendar date as YYYY-MM-DD", () => {
     expect(isoDay(new Date(2026, 0, 5, 23, 30))).toBe("2026-01-05");
+  });
+});
+
+describe("editPatch", () => {
+  const original = item("a", false, "2026-10-11T00:00:00.000Z");
+  original.text = "Call Grandma";
+
+  it("is null when nothing changed", () => {
+    expect(editPatch(original, "Call Grandma")).toBeNull();
+  });
+
+  it("ignores changes that are only surrounding whitespace", () => {
+    expect(editPatch(original, "  Call Grandma \n")).toBeNull();
+  });
+
+  it("sends the text when it changed", () => {
+    expect(editPatch(original, "Call Grandma on Sundays")).toEqual({ text: "Call Grandma on Sundays" });
+  });
+
+  it("sends a pin change on its own", () => {
+    expect(editPatch(original, "Call Grandma", { pinned: true })).toEqual({ pinned: true });
+  });
+
+  it("sends a text change together with archiving", () => {
+    expect(editPatch(original, "Call Grandma soon", { archived: true })).toEqual({
+      text: "Call Grandma soon",
+      archived: true,
+    });
+  });
+});
+
+describe("swipeOutcome", () => {
+  it("archives once the item is dragged halfway to the left", () => {
+    expect(swipeOutcome(-200, 400)).toBe("archive");
+  });
+
+  it("springs back before halfway", () => {
+    expect(swipeOutcome(-199, 400)).toBe("back");
+  });
+
+  it("springs back after a drag to the right", () => {
+    expect(swipeOutcome(300, 400)).toBe("back");
   });
 });
