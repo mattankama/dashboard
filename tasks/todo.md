@@ -22,7 +22,7 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [ ] **Task 2: Schedule**
+- [x] **Task 2: Schedule**
 
   **Description:** Pure functions for the most recent target time ≤ now, the ISO week of a date, the header's date range, and the footer's print date.
 

@@ -8,7 +8,7 @@
   "scripts": {
     "weekly": "node src/weekly.ts",
     "dry-run": "node src/weekly.ts --dry-run",
-    "test": "node --test \"test/**/*.test.ts\"",
+    "test": "TZ=America/Los_Angeles node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.json"
   },
