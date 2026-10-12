@@ -51,11 +51,13 @@ export function editPatch(item, draft, extra = {}) {
 }
 
 /**
- * A swipe acts once the item has been dragged at least halfway to the left.
+ * A swipe acts once the item has been dragged at least halfway, either way.
  * @param {number} dx  horizontal drag distance in px (negative = left)
  * @param {number} width  the item's width in px
- * @returns {"archive" | "back"}
+ * @returns {"left" | "right" | "back"}
  */
 export function swipeOutcome(dx, width) {
-  return dx <= -width / 2 ? "archive" : "back";
+  if (dx <= -width / 2) return "left";
+  if (dx >= width / 2) return "right";
+  return "back";
 }

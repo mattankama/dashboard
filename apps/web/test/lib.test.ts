@@ -62,15 +62,16 @@ describe("editPatch", () => {
 });
 
 describe("swipeOutcome", () => {
-  it("archives once the item is dragged halfway to the left", () => {
-    expect(swipeOutcome(-200, 400)).toBe("archive");
+  it("acts left once the item is dragged halfway to the left", () => {
+    expect(swipeOutcome(-200, 400)).toBe("left");
   });
 
-  it("springs back before halfway", () => {
+  it("acts right once the item is dragged halfway to the right", () => {
+    expect(swipeOutcome(200, 400)).toBe("right");
+  });
+
+  it("springs back before halfway either way", () => {
     expect(swipeOutcome(-199, 400)).toBe("back");
-  });
-
-  it("springs back after a drag to the right", () => {
-    expect(swipeOutcome(300, 400)).toBe("back");
+    expect(swipeOutcome(199, 400)).toBe("back");
   });
 });

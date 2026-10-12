@@ -157,11 +157,14 @@ function renderEditor(item) {
   area.value = draft;
   area.setAttribute("aria-label", "Edit item");
 
-  const words = document.createElement("div");
-  words.className = "edit-words";
-  words.append(word(item.pinned ? "Unpin" : "Pin", "pin"), word("Archive", "archive"));
-
-  editor.append(area, words);
+  editor.append(area);
+  // On the phone these actions are swipes; with a mouse or trackpad they're words.
+  if (finePointer.matches) {
+    const words = document.createElement("div");
+    words.className = "edit-words";
+    words.append(word(item.pinned ? "Unpin" : "Pin", "pin"), word("Archive", "archive"));
+    editor.append(words);
+  }
   return editor;
 }
 
@@ -306,6 +309,24 @@ function commitEdit(extra = {}, refocus = false) {
       }
       render();
       showNotice(`Couldn't save your edit. ${describe(err)}`);
+    },
+  );
+}
+
+/**
+ * Pins or unpins straight away (a swipe right on the phone).
+ * @param {Item} item
+ */
+function togglePin(item) {
+  const pinned = !item.pinned;
+  putItem({ ...item, pinned });
+  render();
+  patchItem(item.id, { pinned }).then(
+    ({ item: saved }) => putItem(saved),
+    (err) => {
+      putItem(item);
+      render();
+      showNotice(`Couldn't ${pinned ? "pin" : "unpin"} that item. ${describe(err)}`);
     },
   );
 }
@@ -489,10 +510,20 @@ document.addEventListener("pointerdown", (event) => {
   if (editingId !== null && !(/** @type {Element} */ (event.target).closest(".editing"))) editArea()?.blur();
 });
 
-enableSwipe(list, (id) => {
-  const item = items.find((i) => i.id === id);
-  if (item) archive(item);
-});
+/**
+ * @param {(item: Item) => void} act
+ * @returns {(id: string) => void}
+ */
+function onItem(act) {
+  return (id) => {
+    const item = items.find((i) => i.id === id);
+    if (item) act(item);
+  };
+}
+
+enableSwipe(list, (direction) =>
+  direction === "left" ? { leaves: true, run: onItem(archive) } : { leaves: false, run: onItem(togglePin) },
+);
 
 undoButton.addEventListener("click", (event) => undoArchive(event.detail === 0));
 undoLine.addEventListener("pointerenter", pauseUndo);

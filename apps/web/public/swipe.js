@@ -1,15 +1,19 @@
 // @ts-check
-// Swipe an item left to act on it. Touch and pen only: a mouse drag does nothing,
-// and every swipe action is also reachable by tapping the item (docs/UI.md).
+// Swipe an item left or right to act on it. Touch and pen only: a mouse drag does
+// nothing, and on a laptop the same actions are words that appear on tap (docs/UI.md).
 import { swipeOutcome } from "./lib.js";
 
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
+/** @typedef {{ leaves: boolean, run: (id: string) => void }} SwipeAction */
+
 /**
  * @param {HTMLElement} list
- * @param {(id: string) => void} onSwipe  called once the item has slid off the page
+ * @param {(direction: "left" | "right") => SwipeAction | null} actionFor
+ *   What a swipe that way does right now; null means items don't move that way.
+ *   An action that `leaves` slides the item off the page before it runs.
  */
-export function enableSwipe(list, onSwipe) {
+export function enableSwipe(list, actionFor) {
   /** @type {{ li: HTMLElement, pointer: number, x: number, y: number, dx: number, swiping: boolean } | null} */
   let drag = null;
   // A swipe ends with a click on the item; it mustn't also open the editor.
@@ -36,7 +40,7 @@ export function enableSwipe(list, onSwipe) {
       drag.li.setPointerCapture(drag.pointer);
       drag.li.style.transition = "none";
     }
-    drag.dx = Math.min(0, dx);
+    drag.dx = actionFor(dx < 0 ? "left" : "right") ? dx : 0;
     drag.li.style.translate = `${drag.dx}px 0`;
   });
 
@@ -65,13 +69,16 @@ export function enableSwipe(list, onSwipe) {
 
     ignoreClicksUntil = performance.now() + 400;
     const outcome = cancelled ? "back" : swipeOutcome(dx, li.offsetWidth);
-    slide(li, outcome === "archive" ? "-100%" : "0px", () => {
-      if (outcome === "archive") {
-        onSwipe(li.dataset.id ?? "");
-      } else {
-        li.style.translate = "";
-        li.style.transition = "";
-      }
+    const action = outcome === "back" ? null : actionFor(outcome);
+    const id = li.dataset.id ?? "";
+    if (action?.leaves) {
+      slide(li, outcome === "left" ? "-100%" : "100%", () => action.run(id));
+      return;
+    }
+    slide(li, "0px", () => {
+      li.style.translate = "";
+      li.style.transition = "";
+      action?.run(id);
     });
   }
 }
