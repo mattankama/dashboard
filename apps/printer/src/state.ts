@@ -14,6 +14,8 @@ export interface State {
   unlock(): Promise<void>;
   saveSheet(date: string, pdf: Buffer): Promise<string>;
   heartbeat(at: Date): Promise<void>;
+  weekState(week: string): Promise<{ status: string; at: Date } | null>;
+  lastRun(): Promise<Date | null>;
 }
 
 const STALE_MS = 2 * 60 * 60 * 1000;
@@ -70,5 +72,16 @@ export function fileState(dir: string, { now = () => new Date() }: { now?: () =>
       return file;
     },
     heartbeat: (when) => write(at("last-run"), `${when.toISOString()}\n`),
+
+    async weekState(week) {
+      const text = await readFile(at("weeks", week), "utf8").catch(() => null);
+      if (text === null) return null;
+      const [status, when] = text.trim().split(" ");
+      return { status, at: new Date(when) };
+    },
+    async lastRun() {
+      const text = await readFile(at("last-run"), "utf8").catch(() => null);
+      return text === null ? null : new Date(text.trim());
+    },
   };
 }

@@ -10,7 +10,8 @@
     "dry-run": "node src/weekly.ts --dry-run",
     "test": "TZ=America/Los_Angeles node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json",
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "status": "node src/weekly.ts --status"
   },
   "devDependencies": {
     "@types/node": "24.19.2",

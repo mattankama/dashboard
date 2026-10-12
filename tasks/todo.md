@@ -3,7 +3,7 @@
 Plan: `tasks/plan.md`. Standard checks: `npm test`, `npm run typecheck`, `npm run build` in each app touched.
 Never load launchd, deploy, print or email in these tasks.
 
-- [ ] **Task 1: Printer status, mark-done, quieter logs**
+- [x] **Task 1: Printer status, mark-done, quieter logs**
   - `node src/weekly.ts --status` (and `npm run status`) prints a plain-English health check:
     - the next print time and this week's state;
     - the last run, and whether it's installed;

@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import type { Item, RunReport } from "../src/api.ts";
 import { parseConfig, type Config } from "../src/config.ts";
 import type { Email, SendResult } from "../src/email.ts";
-import { runWeekly, type JobDeps } from "../src/job.ts";
+import { markThisWeekDone, runWeekly, type JobDeps } from "../src/job.ts";
 import type { PrinterStatus, PrintResult } from "../src/printer.ts";
 import type { State } from "../src/state.ts";
 import { memoryLogger } from "./fakes.ts";
@@ -53,6 +53,8 @@ function memoryState(): State & { done: Map<string, string>; alerts: Set<string>
       return `/state/sheets/weekly-${date}.pdf`;
     },
     heartbeat: async () => {},
+    weekState: async (week: string) => (done.has(week) ? { status: done.get(week)!, at: new Date(0) } : null),
+    lastRun: async () => null,
   };
   return state;
 }
@@ -295,5 +297,22 @@ describe("failures before there's a sheet", () => {
     assert.equal(calls.items, 0);
     assert.equal(calls.notices.length, 1);
     assert.match(calls.notices[0], /apps\/printer\/\.env/);
+  });
+});
+
+describe("markThisWeekDone (used by install.sh)", () => {
+  it("marks the current week skipped, so installing never prints by surprise", async () => {
+    const { deps, state } = fakeJob({ now: MONDAY_0800 });
+
+    assert.equal(await markThisWeekDone(deps.state, deps.now(), deps.config.schedule), WEEK);
+    assert.equal(state.done.get(WEEK), "skipped");
+  });
+
+  it("leaves a week that's already done alone", async () => {
+    const { deps, state } = fakeJob();
+    state.done.set(WEEK, "printed");
+
+    await markThisWeekDone(deps.state, deps.now(), deps.config.schedule);
+    assert.equal(state.done.get(WEEK), "printed");
   });
 });

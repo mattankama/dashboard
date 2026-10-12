@@ -36,6 +36,16 @@ const when = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", 
 
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
+/**
+ * Marks the current week done without printing (install.sh does this, so installing
+ * mid-week never prints by surprise). A week that's already done is left as it is.
+ */
+export async function markThisWeekDone(state: State, now: Date, schedule: Config["schedule"]): Promise<string> {
+  const week = isoWeek(mostRecentTarget(now, schedule));
+  if (!(await state.isDone(week))) await state.markDone(week, "skipped");
+  return week;
+}
+
 export async function runWeekly(deps: JobDeps, { force }: { force: boolean }): Promise<Outcome> {
   if (!(await deps.state.lock())) {
     deps.log.info("another run is still going; leaving it to finish");

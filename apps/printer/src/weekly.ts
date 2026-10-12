@@ -7,7 +7,7 @@ import { dashboardApi } from "./api.ts";
 import { loadEnvFile, missingForDryRun, parseConfig, type Config } from "./config.ts";
 import { sendEmail } from "./email.ts";
 import { parseFlags, USAGE, type Flags } from "./flags.ts";
-import { runWeekly } from "./job.ts";
+import { markThisWeekDone, runWeekly } from "./job.ts";
 import { fileLogger, type Logger } from "./log.ts";
 import { notify } from "./notify.ts";
 import { printerStatus, printPdf } from "./printer.ts";
@@ -16,6 +16,7 @@ import { SAMPLE_ITEMS } from "./sample.ts";
 import { fileDate, mostRecentTarget } from "./schedule.ts";
 import { buildSheet } from "./sheet.ts";
 import { fileState } from "./state.ts";
+import { formatStatus, gatherStatus } from "./status.ts";
 
 const APP_DIR = path.join(import.meta.dirname, "..");
 
@@ -65,10 +66,34 @@ async function main(): Promise<number> {
     for (const error of config.errors) console.error(error);
     return 1;
   }
-  const log = fileLogger(config.config.logFile);
+  const flags = parsed.flags;
+  // Echo log lines only when someone is watching: under launchd stdout isn't a
+  // terminal, so its own log (dashboard.launchd.log) only catches crashes.
+  const log = fileLogger(config.config.logFile, { echo: Boolean(process.stdout.isTTY) || flags.dryRun });
 
-  if (parsed.flags.dryRun) return dryRun(config.config, parsed.flags, log);
-  return realRun(config.config, parsed.flags, log);
+  if (flags.status) return status(config.config);
+  if (flags.markDone) {
+    const week = await markThisWeekDone(fileState(config.config.stateDir), new Date(), config.config.schedule);
+    log.info(`week ${week} marked done without printing (--mark-done)`);
+    return 0;
+  }
+  if (flags.dryRun) return dryRun(config.config, flags, log);
+  return realRun(config.config, flags, log);
+}
+
+/** `npm run status`: looks, never acts. */
+async function status(config: Config): Promise<number> {
+  const info = await gatherStatus({
+    now: () => new Date(),
+    config,
+    run,
+    uid: process.getuid?.() ?? 0,
+    state: fileState(config.stateDir),
+    printerStatus: () => printerStatus(config.printerName, { run }),
+    activeItems: config.apiUrl && config.printerToken ? () => dashboardApi(config.apiUrl!, config.printerToken!).activeItems() : null,
+  });
+  console.log(formatStatus(info));
+  return 0;
 }
 
 /** The real thing: what launchd runs every hour (Phase 3). Prints and emails when it's due. */

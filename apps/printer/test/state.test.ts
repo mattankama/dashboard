@@ -71,3 +71,18 @@ describe("files", () => {
     assert.ok(existsSync(path.join(dir, "sheets")));
   });
 });
+
+describe("reading state back (for --status)", () => {
+  it("returns a week's status and time, and the last run", async () => {
+    const dir = freshDir();
+    const state = fileState(dir, { now: () => new Date("2026-10-11T16:02:00.000Z") });
+
+    assert.equal(await state.weekState("2026-W41"), null);
+    assert.equal(await state.lastRun(), null);
+    await state.markDone("2026-W41", "printed");
+    await state.heartbeat(new Date("2026-10-11T17:00:00.000Z"));
+
+    assert.deepEqual(await state.weekState("2026-W41"), { status: "printed", at: new Date("2026-10-11T16:02:00.000Z") });
+    assert.deepEqual(await state.lastRun(), new Date("2026-10-11T17:00:00.000Z"));
+  });
+});
