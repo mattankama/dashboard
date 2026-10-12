@@ -1,5 +1,6 @@
-import { exports } from "cloudflare:workers";
-import { describe, expect, it } from "vitest";
+import { env, exports } from "cloudflare:workers";
+import { describe, expect, it, vi } from "vitest";
+import worker from "../src/index";
 
 describe("routing", () => {
   it("returns a JSON 404 for an unknown /api path", async () => {
@@ -16,5 +17,23 @@ describe("routing", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toContain("text/html");
     expect(await res.text()).toContain("<title>Dashboard</title>");
+  });
+});
+
+describe("unexpected errors", () => {
+  it("returns a generic 500 and logs the detail server-side", async () => {
+    const brokenDb = {
+      prepare() {
+        throw new Error("database exploded: secret detail");
+      },
+    } as unknown as D1Database;
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const res = await worker.fetch(new Request("http://localhost/api/items"), { ...env, DB: brokenDb });
+
+    expect(res.status).toBe(500);
+    expect(await res.text()).toBe('{"error":"Internal error"}');
+    expect(logged).toHaveBeenCalledWith("Unhandled error", "GET", "/api/items", expect.any(Error));
+    logged.mockRestore();
   });
 });

@@ -49,7 +49,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 3: API: create and list items**
+- [x] **Task 3: API: create and list items**
 
   **Description:** `POST /api/items` and `GET /api/items?status=active|archived`, with the spec's validation, item shape and ordering. This adds the router's `405` and `415` handling and the catch-all `500` that logs server-side and returns a generic message.
 

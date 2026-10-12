@@ -13,6 +13,6 @@ export default defineConfig(async () => {
         miniflare: { bindings: { TEST_MIGRATIONS: migrations } },
       }),
     ],
-    test: { setupFiles: ["./test/apply-migrations.ts"] },
+    test: { setupFiles: ["./test/setup.ts"] },
   };
 });
