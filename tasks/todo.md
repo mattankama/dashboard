@@ -37,7 +37,7 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [ ] **Task 3: Dashboard API client**
+- [x] **Task 3: Dashboard API client**
 
   **Description:** `getActiveItems` and `recordRun` with the bearer token, a timeout, and clear errors (401, 503, network).
 
