@@ -16,7 +16,7 @@ Never load launchd, deploy, print or email in these tasks.
   - `src/launchd.ts` renders the job file (XML-escaped; unit-tested).
   - `install.sh [--dry-run] [--print-this-week]` and `uninstall.sh`.
   - Verify: `./install.sh --dry-run` passes `plutil -lint`; `bash -n` on both scripts. Nothing is loaded.
-- [ ] **Task 3: Access check in the Worker**
+- [x] **Task 3: Access check in the Worker**
   - `/api/*` except `/api/printer/*` needs a valid `Cf-Access-Jwt-Assertion` (RS256, team certs, `aud`, `iss`, `exp`/`nbf`), else `403`. `localhost` skips the check. Off `localhost`, missing settings return `503`.
   - Tests use generated keys and mocked certs.
 - [ ] **Task 4: Service token from the Mac**

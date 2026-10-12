@@ -1,3 +1,4 @@
+import { checkAccess } from "./access";
 import { error } from "./http";
 import { createItem, getItems, patchItem, removeItem } from "./items";
 import { checkPrinterToken, createRun, getPrinterItems } from "./printer";
@@ -17,11 +18,12 @@ const routes: Route[] = [
 ];
 
 async function handleApi(request: Request, env: Env): Promise<Response> {
-  // Every printer route needs the bearer token, checked before anything else.
-  if (new URL(request.url).pathname.startsWith("/api/printer/")) {
-    const refused = await checkPrinterToken(request, env);
-    if (refused) return refused;
-  }
+  // Printer routes need the bearer token; every other route needs Cloudflare
+  // Access's signed JWT (skipped on localhost). Both are checked before routing.
+  const refused = new URL(request.url).pathname.startsWith("/api/printer/")
+    ? await checkPrinterToken(request, env)
+    : await checkAccess(request, env);
+  if (refused) return refused;
 
   for (const route of routes) {
     const match = route.pattern.exec(request.url);
