@@ -22,3 +22,6 @@ Mattan wants a UI that doesn't feel generic, so Claude asks before making any vi
 
 ### 2026-10-11: `@cloudflare/vitest-plugin` instead of `@cloudflare/vitest-pool-workers`
 Cloudflare renamed the Workers test integration, and the old package is deprecated with no further updates. Mattan approved the swap. It's the same team and the same API style (`cloudflareTest()` plugin, `env`/`exports` from `cloudflare:workers`). It also dropped the older wrangler copy the old package pulled in, which cleared `npm audit`.
+
+### 2026-10-11: The look, and no categories in the UI
+Mattan chose from an options page: a dot-grid journal page, Charter (built into Apple devices, so no font files), a honey amber accent, today's date as the heading, a blank dot row between items, and a centered phone-width page on laptops. Mattan also chose **no categories in the UI**. This replaces the earlier "optional category with suggestions" call: Claude groups the printed sheet, and the fallback is one list. The API keeps its optional `category` field (already built and tested, harmless), and Task 8 (category suggestions) is dropped. Details in `docs/UI.md`.

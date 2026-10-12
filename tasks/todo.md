@@ -120,7 +120,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 - [ ] **Task 6: UI: edit in place, pin, archive with undo**
 
-  **Description:** Per `docs/UI.md`: tap an item to edit it in place (text, category, pin, archive), and swipe left to archive. Archive removes the item and shows an undo toast for about 5 seconds; Undo restores it. Archive is also reachable from the edit view, for mouse and keyboard. Ask Mattan about any interaction detail `docs/UI.md` doesn't settle.
+  **Description:** Per `docs/UI.md`: tap an item to edit it in place (text, pin, archive), and swipe left to archive. Archive removes the item and shows an undo toast for about 5 seconds; Undo restores it. Archive is also reachable from the edit view, for mouse and keyboard. Ask Mattan about any interaction detail `docs/UI.md` doesn't settle.
 
   **Acceptance criteria:**
   - Edits, pin/unpin and archive persist across a page reload.
@@ -129,7 +129,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
   **Verification:**
   - [ ] Standard checks pass
-  - [ ] Manual at a phone viewport: edit text, change category, pin, unpin, archive, undo, archive without undo, then reload and check each result.
+  - [ ] Manual at a phone viewport: edit text, pin, unpin, archive, undo, archive without undo, then reload and check each result.
 
   **Dependencies:** Tasks 4, 5
 
@@ -160,27 +160,11 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 8: Category suggestions**
-
-  **Description:** `GET /api/categories` returns the distinct categories of active items, A–Z. The category inputs (add form and edit) offer them through a `<datalist>`.
-
-  **Acceptance criteria:**
-  - The list has no nulls or duplicates, and categories of archived items aren't included.
-  - A category added in the UI is suggested in the next add without a reload.
-
-  **Verification:**
-  - [ ] Standard checks pass
-  - [ ] Manual: add two items with categories; the suggestion list shows both.
-
-  **Dependencies:** Task 4
-
-  **Files likely touched:** `apps/web/src/db.ts`, `apps/web/src/items.ts`, `apps/web/test/items.test.ts`, `apps/web/public/app.js`, `apps/web/public/index.html`
-
-  **Estimated scope:** M
+- **Task 8: dropped (2026-10-11).** Mattan chose no categories in the UI (`docs/UI.md`), so there's nothing to suggest. The API keeps its optional `category` field.
 
 ---
 
-### Checkpoint B: after Tasks 5–8
+### Checkpoint B: after Tasks 5–7
 - [ ] Standard checks pass
 - [ ] Every UI story (spec user stories 1–6) works and persists across reload (spec success criteria 4–6)
 - [ ] Review with Mattan before continuing
@@ -221,7 +205,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - [ ] Standard checks pass
   - [ ] Manual: DevTools Application → Manifest; keyboard-only run through add, edit, archive, undo; phone-viewport screenshot shown to Mattan for sign-off
 
-  **Dependencies:** Tasks 4–8
+  **Dependencies:** Tasks 4–7
 
   **Files likely touched:** `apps/web/public/manifest.webmanifest`, `apps/web/public/icon.svg`, `apps/web/public/apple-touch-icon.png`, `apps/web/public/index.html`, `apps/web/public/style.css`
 
@@ -231,7 +215,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 - [ ] **Task 11: Docs and final check against the spec**
 
-  **Description:** Write `apps/web/CLAUDE.md` (commands and gotchas) and add the commands to the root `CLAUDE.md`. Update `docs/ARCHITECTURE.md` (`wrangler.jsonc`, `GET /api/categories`, `print_runs.created_at`) and add the Phase 1 entries to `docs/DECISIONS.md` (no UI framework, no router library, Workers-runtime tests, `wrangler.jsonc`). Then walk through spec success criteria 1–9 from a clean state.
+  **Description:** Write `apps/web/CLAUDE.md` (commands and gotchas) and add the commands to the root `CLAUDE.md`. Update `docs/ARCHITECTURE.md` (`wrangler.jsonc`, `print_runs.created_at`) and add the Phase 1 entries to `docs/DECISIONS.md` (no UI framework, no router library, Workers-runtime tests, `wrangler.jsonc`). Then walk through spec success criteria 1–9 from a clean state.
 
   **Acceptance criteria:**
   - From `rm -rf node_modules .wrangler`: `npm install && npm run db:migrate:local && npm run dev` gives a working app.

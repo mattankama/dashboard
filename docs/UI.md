@@ -13,12 +13,21 @@ A calm, pleasant everyday planner, not a generic "vibe-coded" app. Simple, nothi
 - **Item actions:** swipe left to archive (with undo), tap to edit in place. Pinning lives in the edit view. Every swipe action must also be reachable without swiping (from the edit view) for mouse and keyboard users.
 - **No visible buttons that could live in a menu or gesture.** The list shows only the items.
 
-## Never
-Gradients, glassmorphism, glow, heavy shadows, card grids, emoji as icons, pill-badge clutter, purple/blue "AI" palettes, stock icon sets everywhere, bouncy animations.
+## Decided from the options page (2026-10-11)
+Options page: https://claude.ai/artifact/4XDzBZaW3WPE2JxbcbraZa
+- **Dot-grid journal page:** a faint dot grid behind the list, as in a bullet journal. A muted dash starts each item; a honey ★ replaces it on pinned items.
+- **Serif: Charter** (built into iPhone and Mac; no font files). Labels use the system sans.
+- **Amber: Honey** (`#e2a651`). Page `#1c1814`, text `#ebe1d2`, muted `#a39582`, dots `#4a3e33`.
+- **No categories in the UI.** The API's optional `category` field stays but the UI never sets it, so the sheet's fallback is one list.
+- **Top of the page: today's date,** like a planner page (e.g. "Sunday, October 11").
+- **Spacing:** one blank dot row between items, so every item has a finger-sized tap area.
+- **Placeholder:** "Worth remembering…". **Empty page:** "A clean page."
+- **Laptop:** a phone-width page centered in the window, with plain darker space (`#13100d`) around it.
 
-## Still to ask Mattan (before or during Task 4)
-1. Where category is set, and how it shows on the list (or whether it's hidden).
-2. How to reach the archived view (e.g. tap the title, or a quiet link at the end of the list).
-3. Which serif and which sans to use, and whether to load web fonts or stick to system fonts.
-4. Wording: placeholder text, empty state, undo toast.
-5. The desktop layout (a centered column?), and the home-screen icon.
+## Never
+Gradients, glassmorphism, glow, heavy shadows, card grids, emoji as icons, pill-badge clutter, purple/blue "AI" palettes, stock icon sets everywhere, bouncy animations, middle-dot meta strings ("A · B").
+
+## Still to ask Mattan
+1. Wording of the undo toast (Task 6).
+2. How to reach the archived view (Task 7).
+3. The home-screen icon (Task 10).

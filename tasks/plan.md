@@ -28,7 +28,7 @@ T1 toolchain ──▶ T2 schema ──▶ T3 create+list API ──▶ T4 UI: a
                                       ├──▶ T5 PATCH API ──▶ T6 UI: edit/pin/archive+undo
                                       │          │
                                       │          └──▶ T7 DELETE + archived view
-                                      ├──▶ T8 categories + suggestions   (needs T4)
+                                      ├──▶ T8 dropped: no categories in the UI
                                       └──▶ T9 printer routes
 T4 … T9 ──▶ T10 PWA + polish ──▶ T11 docs + final check
 ```
@@ -45,10 +45,10 @@ T4 … T9 ──▶ T10 PWA + polish ──▶ T11 docs + final check
 | 5 | API: edit, pin, archive and restore (`PATCH`) | M | 3 |
 | 6 | UI: tap to edit, swipe to archive, undo | S | 4, 5 |
 | 7 | Delete and the archived view (API + UI) | M | 5, 6 |
-| 8 | Category suggestions (API + UI) | M | 4 |
+| 8 | ~~Category suggestions~~ dropped: no categories in the UI | — | — |
 | — | **Checkpoint B:** every UI story works and persists across reload | | |
 | 9 | Printer routes with bearer token | M | 3 |
-| 10 | Home-screen app, accessibility and safe-text pass | M | 4–8 |
+| 10 | Home-screen app, accessibility and safe-text pass | M | 4–7 |
 | 11 | Docs and final check against the spec's success criteria | M | 1–10 |
 | — | **Checkpoint C:** Phase 1 complete, review with Mattan | | |
 

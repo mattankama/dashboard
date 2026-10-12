@@ -15,7 +15,7 @@ Build the place where items live and the quickest possible way to add them from 
 1. When something comes to mind, I open Dashboard on my phone, type it, hit Enter, and it's saved. A few seconds, total.
 2. I can see all my active items, with pinned ones at the top.
 3. I can pin or unpin an item, so it prints first.
-4. I can fix a typo or change an item's category.
+4. I can fix a typo.
 5. After reading the weekly sheet, I archive what's no longer relevant. If I archive by mistake, I can undo it.
 6. I can look at archived items, restore one, or delete it for good.
 7. *(For Phase 2)* The Mac job can fetch active items and record a print run with a bearer token.
@@ -28,7 +28,7 @@ Build the place where items live and the quickest possible way to add them from 
 2. **No router library.** About six routes, matched by hand in the Worker. No Hono.
 3. **Printer routes are built in Phase 1**, because they pin down the contract Phase 2 needs and are easy to test locally.
 4. **Both tables are created in the first migration** (`items` and `print_runs`), so the schema doesn't change again in Phase 2.
-5. **Category is optional free text**, with existing categories offered as suggestions (`<datalist>`). No fixed list, no category management screen.
+5. **No categories in the UI** (Mattan's call; see `docs/UI.md`). The API keeps the data model's optional `category` field, unused by the UI, so the printed sheet's fallback is one list.
 6. **Archiving is manual.** No automatic expiry. If expiry is wanted later, it can be computed from `created_at` with no schema change.
 7. **PWA = add-to-home-screen only**: a web manifest and an icon. No service worker and no offline capture in Phase 1.
 8. **Hard delete is only offered for archived items** in the UI. The API allows it on any item.
@@ -102,9 +102,6 @@ All bodies are JSON. Mutating requests must send `Content-Type: application/json
 | `POST /api/items` | `{ text, category?, pinned? }` | `201 { item }` | `400` validation |
 | `PATCH /api/items/:id` | `{ text?, category?, pinned?, archived? }` | `200 { item }` | `400`, `404` |
 | `DELETE /api/items/:id` | — | `204` | `404` |
-| `GET /api/categories` | — | `200 { categories: string[] }` from active items, A–Z | — |
-
-`GET /api/categories` is new compared to the architecture doc; it feeds the category suggestions.
 
 **Ordering:** active items are pinned first, then newest first. Archived items are most recently archived first.
 
@@ -150,7 +147,7 @@ One screen, phone-first, also fine on a laptop. **Look and interaction follow `d
 ```
 
 - **Add:** a field at the bottom; return saves. The new item appears without a reload, and the field clears and keeps focus. On failure the text stays and an error shows.
-- **Each item:** text exactly as written (newlines kept). Tap to edit in place (text, category, pin, archive). Swipe left to archive.
+- **Each item:** text exactly as written (newlines kept). Tap to edit in place (text, pin, archive). Swipe left to archive.
 - **Archive:** the item leaves the list, and an undo toast shows for about 5 seconds.
 - **Archived view:** restore, or delete with an in-page confirmation (never a browser `confirm()`).
 - **Empty state:** one quiet line.
@@ -257,7 +254,7 @@ Phase 1 is done when all of these are true:
 6. Text containing HTML, quotes, emoji and newlines is stored and shown exactly as typed.
 7. `curl -H "Authorization: Bearer <token from .dev.vars>" localhost:8787/api/printer/items` returns only active items; without the token it returns `401`. `POST /api/printer/runs` stores a run.
 8. `apps/web/CLAUDE.md` exists, and the root `CLAUDE.md` lists the new commands.
-9. `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` reflect anything that changed (`wrangler.jsonc`, `GET /api/categories`, `print_runs.created_at`, no UI framework).
+9. `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` reflect anything that changed (`wrangler.jsonc`, `print_runs.created_at`, no UI framework).
 
 ## Out of Scope for Phase 1
 
@@ -265,6 +262,6 @@ Deploying, Cloudflare Access and the Access JWT check, custom domain, offline ca
 
 ## Resolved Questions
 
-1. **Categories:** an optional free-text field with suggestions from categories already in use (assumption 5). It costs little, gives the fallback grouping something to work with, and can be ignored entirely.
+1. **Categories:** none in the UI. Mattan decided this while choosing the look (`docs/UI.md`); the API keeps the optional field.
 2. **Item length limit:** 500 characters. These are short notes to keep in mind, and the sheet has to fit on one or two pages. Raising the limit later is a one-line change.
 3. **Print day/time and expiry** don't affect Phase 1. They're decided in Phase 2 (default Sunday 09:00, archive by hand).
