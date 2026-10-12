@@ -28,7 +28,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 2: D1 schema applied in tests and locally**
+- [x] **Task 2: D1 schema applied in tests and locally**
 
   **Description:** Add `migrations/0001_init.sql` exactly as in the spec's data model (`items`, `print_runs`, the index and the `CHECK` constraints). Apply the migrations automatically before tests, and locally with `npm run db:migrate:local`.
 
