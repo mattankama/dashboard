@@ -19,6 +19,17 @@ describe("routing", () => {
     expect(await res.text()).toContain("<title>Dashboard</title>");
   });
 
+  it("serves the page with a strict Content-Security-Policy (public/_headers)", async () => {
+    const res = await exports.default.fetch("http://localhost/");
+    const csp = res.headers.get("Content-Security-Policy") ?? "";
+
+    for (const rule of ["default-src 'self'", "object-src 'none'", "base-uri 'none'", "frame-ancestors 'none'"]) {
+      expect(csp).toContain(rule);
+    }
+    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(res.headers.get("Referrer-Policy")).toBe("no-referrer");
+  });
+
   it("links the home-screen manifest and icons", async () => {
     const html = await (await exports.default.fetch("http://localhost/")).text();
 

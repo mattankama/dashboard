@@ -1,4 +1,4 @@
-import { checkAccess } from "./access";
+import { checkSession, signIn } from "./auth";
 import { error } from "./http";
 import { createItem, getItems, patchItem, removeItem } from "./items";
 import { checkPrinterToken, createRun, getPrinterItems } from "./printer";
@@ -11,18 +11,24 @@ interface Route {
 }
 
 const routes: Route[] = [
+  { pattern: new URLPattern({ pathname: "/api/login" }), methods: { POST: signIn } },
   { pattern: new URLPattern({ pathname: "/api/items" }), methods: { GET: getItems, POST: createItem } },
   { pattern: new URLPattern({ pathname: "/api/items/:id" }), methods: { PATCH: patchItem, DELETE: removeItem } },
   { pattern: new URLPattern({ pathname: "/api/printer/items" }), methods: { GET: getPrinterItems } },
   { pattern: new URLPattern({ pathname: "/api/printer/runs" }), methods: { POST: createRun } },
 ];
 
+// Checked before routing: the printer routes need the printer's bearer token,
+// signing in needs nothing, and every other route needs a signed-in session.
+function checkCaller(request: Request, env: Env): Promise<Response | null> {
+  const { pathname } = new URL(request.url);
+  if (pathname.startsWith("/api/printer/")) return checkPrinterToken(request, env);
+  if (pathname === "/api/login") return Promise.resolve(null);
+  return checkSession(request, env);
+}
+
 async function handleApi(request: Request, env: Env): Promise<Response> {
-  // Printer routes need the bearer token; every other route needs Cloudflare
-  // Access's signed JWT (skipped on localhost). Both are checked before routing.
-  const refused = new URL(request.url).pathname.startsWith("/api/printer/")
-    ? await checkPrinterToken(request, env)
-    : await checkAccess(request, env);
+  const refused = await checkCaller(request, env);
   if (refused) return refused;
 
   for (const route of routes) {
@@ -36,17 +42,27 @@ async function handleApi(request: Request, env: Env): Promise<Response> {
   return error(404, "Not found");
 }
 
+// API replies hold private data and are JSON or empty: never cached, never sniffed.
+function withApiHeaders(res: Response): Response {
+  const out = new Response(res.body, res);
+  out.headers.set("Cache-Control", "no-store");
+  out.headers.set("X-Content-Type-Options", "nosniff");
+  return out;
+}
+
 export default {
   async fetch(request, env): Promise<Response> {
     const { pathname } = new URL(request.url);
 
     if (pathname.startsWith("/api/")) {
+      let res: Response;
       try {
-        return await handleApi(request, env);
+        res = await handleApi(request, env);
       } catch (err) {
         console.error("Unhandled error", request.method, pathname, err);
-        return error(500, "Internal error");
+        res = error(500, "Internal error");
       }
+      return withApiHeaders(res);
     }
 
     // In production only /api/* reaches the Worker (run_worker_first); this

@@ -7,10 +7,10 @@ declare namespace Cloudflare {
     ASSETS: Fetcher;
     /** Bearer token for /api/printer/*. Unset means those routes refuse every request. */
     PRINTER_TOKEN?: string;
-    /** Cloudflare Access team domain, e.g. https://<team>.cloudflareaccess.com (not secret). */
-    ACCESS_TEAM_DOMAIN?: string;
-    /** The Access application's AUD tag (not secret). */
-    ACCESS_AUD?: string;
+    /** The password for signing in (secret, at least 16 characters). Unset means the deployed app refuses everything. */
+    LOGIN_PASSWORD?: string;
+    /** Signs session cookies (secret, at least 32 characters). Changing it signs every device out. */
+    SESSION_SECRET?: string;
   }
 }
 interface Env extends Cloudflare.Env {}

@@ -1,2 +1,7 @@
 # Copy to .dev.vars (git-ignored) for local dev. Any value works locally.
 PRINTER_TOKEN=dev-token
+# Without these two, localhost needs no password. To try the sign-in screen
+# locally, uncomment them and use Chrome (the cookie is Secure; Chrome keeps it
+# on http://localhost).
+# LOGIN_PASSWORD=local-password-for-dev
+# SESSION_SECRET=local-session-secret-at-least-32-chars

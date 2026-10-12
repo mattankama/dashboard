@@ -116,6 +116,22 @@ export function validateStatus(param: string | null): Result<ItemStatus> {
   return { ok: false, message: "status must be active or archived" };
 }
 
+// Long enough for any password manager's password; anything longer is refused unread.
+export const PASSWORD_MAX = 1024;
+const LOGIN_FIELDS = new Set(["password"]);
+
+export function validateLogin(body: unknown): Result<string> {
+  if (!isObject(body)) return { ok: false, message: "Body must be a JSON object" };
+
+  const unknown = unknownField(body, LOGIN_FIELDS);
+  if (unknown !== undefined) return { ok: false, message: `Unknown field: ${unknown}` };
+  if (typeof body.password !== "string" || body.password === "") return { ok: false, message: "password is required" };
+  if (body.password.length > PASSWORD_MAX) {
+    return { ok: false, message: `password must be at most ${PASSWORD_MAX} characters` };
+  }
+  return { ok: true, value: body.password };
+}
+
 export type RunStatus = "printed" | "emailed_only" | "failed";
 
 export interface NewRun {

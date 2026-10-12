@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateNewItem, validatePatch } from "../src/validate";
+import { PASSWORD_MAX, validateLogin, validateNewItem, validatePatch } from "../src/validate";
 
 describe("validateNewItem", () => {
   it("accepts text alone, with no category and not pinned", () => {
@@ -124,5 +124,30 @@ describe("validatePatch", () => {
 
   it("rejects a body that isn't an object", () => {
     expect(validatePatch([])).toEqual({ ok: false, message: "Body must be a JSON object" });
+  });
+});
+
+describe("validateLogin", () => {
+  it("accepts a password exactly as typed, spaces included", () => {
+    expect(validateLogin({ password: " correct horse " })).toEqual({ ok: true, value: " correct horse " });
+  });
+
+  it("rejects a missing, empty or non-string password", () => {
+    for (const body of [{}, { password: "" }, { password: 42 }]) {
+      expect(validateLogin(body)).toEqual({ ok: false, message: "password is required" });
+    }
+  });
+
+  it("rejects a password over the limit", () => {
+    expect(validateLogin({ password: "x".repeat(PASSWORD_MAX) }).ok).toBe(true);
+    expect(validateLogin({ password: "x".repeat(PASSWORD_MAX + 1) })).toEqual({
+      ok: false,
+      message: `password must be at most ${PASSWORD_MAX} characters`,
+    });
+  });
+
+  it("rejects unknown fields and bodies that aren't objects", () => {
+    expect(validateLogin({ password: "x", user: "me" })).toEqual({ ok: false, message: "Unknown field: user" });
+    expect(validateLogin("x")).toEqual({ ok: false, message: "Body must be a JSON object" });
   });
 });

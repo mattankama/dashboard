@@ -15,19 +15,14 @@
 		]
 	},
 	"d1_databases": [
-		// No database_id yet: the first `npm run deploy` creates the database and writes
-		// its id here (commit that change). Local dev and tests don't need it.
+		// The first `npm run deploy` created the database and wrote its id here.
 		{
 			"binding": "DB",
 			"database_name": "dashboard",
 			"migrations_dir": "migrations",
 			"database_id": "991512c6-7bd0-4c69-9a6f-123c96faf985"
 		}
-	],
-	"vars": {
-		// Cloudflare Access (docs/SETUP.md). Not secrets. While they're empty, the
-		// deployed API answers 503 instead of running open; localhost isn't affected.
-		"ACCESS_TEAM_DOMAIN": "",
-		"ACCESS_AUD": ""
-	}
+	]
+	// Secrets (docs/SETUP.md), set with `npx wrangler secret put`: PRINTER_TOKEN,
+	// LOGIN_PASSWORD and SESSION_SECRET. Until they're set, the deployed API answers 503.
 }

@@ -9,8 +9,11 @@ export default defineConfig(async () => {
     plugins: [
       cloudflareTest({
         wrangler: { configPath: "./wrangler.jsonc" },
-        // Test-only bindings: the real migrations for the setup file, and a printer token.
-        miniflare: { bindings: { TEST_MIGRATIONS: migrations, PRINTER_TOKEN: "test-printer-token" } },
+        // Test-only bindings: the real migrations for the setup file and a printer token.
+        // The login starts unset whatever .dev.vars says; tests that need it set it.
+        miniflare: {
+          bindings: { TEST_MIGRATIONS: migrations, PRINTER_TOKEN: "test-printer-token", LOGIN_PASSWORD: "", SESSION_SECRET: "" },
+        },
       }),
     ],
     test: { setupFiles: ["./test/setup.ts"] },

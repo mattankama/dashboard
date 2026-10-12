@@ -1,3 +1,4 @@
+import { sameSecret } from "./auth";
 import { insertRun, listItems } from "./db";
 import { error, json, readJson } from "./http";
 import { validateRun } from "./validate";
@@ -14,17 +15,6 @@ export async function checkPrinterToken(request: Request, env: Env): Promise<Res
   const match = /^Bearer (.+)$/.exec(header);
   if (!match || !(await sameSecret(match[1], env.PRINTER_TOKEN))) return error(401, "Unauthorized");
   return null;
-}
-
-// Compares SHA-256 digests in constant time, so neither the token's contents
-// nor its length leak through timing.
-async function sameSecret(given: string, expected: string): Promise<boolean> {
-  const encoder = new TextEncoder();
-  const [a, b] = await Promise.all([
-    crypto.subtle.digest("SHA-256", encoder.encode(given)),
-    crypto.subtle.digest("SHA-256", encoder.encode(expected)),
-  ]);
-  return crypto.subtle.timingSafeEqual(a, b);
 }
 
 export async function getPrinterItems(_request: Request, env: Env): Promise<Response> {

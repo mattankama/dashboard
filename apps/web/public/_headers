@@ -1,0 +1,7 @@
+# Headers for the app's own files (the API sets its own in src/index.ts). Workers
+# static assets read this file; it isn't served itself.
+/*
+  Content-Security-Policy: default-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
