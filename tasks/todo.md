@@ -65,7 +65,7 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [ ] **Task 5: The sheet's HTML**
+- [x] **Task 5: The sheet's HTML**
 
   **Description:** `renderSheet(groups, labels, fit)` gives the full HTML per `docs/PRINT_LAYOUT.md`: Letter, 0.75in margins, black and white, Charter, header, groups with rules, ★ for pinned, footer.
 
