@@ -77,7 +77,7 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [ ] **Task 6: PDF and the dry run**
+- [x] **Task 6: PDF and the dry run**
 
   **Description:** `makePdf` runs the installed Chrome headless (a throwaway profile) to print the HTML to PDF, counts the pages, and tries the fit levels until it fits one page (or the fewest, up to two). `--dry-run` (and `--sample`) go from items to `out/weekly-<Sunday>.pdf`.
 
@@ -92,8 +92,8 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 ---
 
 ### Checkpoint A: after Tasks 1–6
-- [ ] Standard checks pass
-- [ ] A dry run makes a one-page PDF that matches `docs/PRINT_LAYOUT.md`
+- [x] Standard checks pass
+- [x] A dry run makes a one-page PDF that matches `docs/PRINT_LAYOUT.md`
 
 ---
 
