@@ -5,12 +5,17 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { dashboardApi } from "./api.ts";
 import { loadEnvFile, missingForDryRun, parseConfig, type Config } from "./config.ts";
+import { sendEmail } from "./email.ts";
 import { parseFlags, USAGE, type Flags } from "./flags.ts";
+import { runWeekly } from "./job.ts";
 import { fileLogger, type Logger } from "./log.ts";
+import { notify } from "./notify.ts";
+import { printerStatus, printPdf } from "./printer.ts";
 import { run } from "./run.ts";
 import { SAMPLE_ITEMS } from "./sample.ts";
 import { fileDate, mostRecentTarget } from "./schedule.ts";
 import { buildSheet } from "./sheet.ts";
+import { fileState } from "./state.ts";
 
 const APP_DIR = path.join(import.meta.dirname, "..");
 
@@ -63,8 +68,31 @@ async function main(): Promise<number> {
   const log = fileLogger(config.config.logFile);
 
   if (parsed.flags.dryRun) return dryRun(config.config, parsed.flags, log);
-  log.error("the real weekly run isn't built yet (Phase 2, Task 9); use --dry-run");
-  return 1;
+  return realRun(config.config, parsed.flags, log);
+}
+
+/** The real thing: what launchd runs every hour (Phase 3). Prints and emails when it's due. */
+async function realRun(config: Config, flags: Flags, log: Logger): Promise<number> {
+  const outcome = await runWeekly(
+    {
+      now: () => new Date(),
+      config,
+      log,
+      state: fileState(config.stateDir),
+      // runWeekly checks the settings before it calls any of these.
+      api: dashboardApi(config.apiUrl ?? "", config.printerToken ?? ""),
+      makeSheet: (items, target, now) =>
+        buildSheet(items, { target, now, client: claudeClient(config), chromePath: config.chromePath, run, log }),
+      printer: {
+        status: () => printerStatus(config.printerName, { run }),
+        print: (file, title) => printPdf(file, config.printerName, title, { run }),
+      },
+      mail: (email) => sendEmail(email, { run, user: config.gmailUser ?? "", password: config.gmailAppPassword ?? "" }),
+      notify: (message) => notify("Dashboard", message, { run }),
+    },
+    { force: flags.force },
+  );
+  return outcome.kind === "failed" ? 1 : 0;
 }
 
 process.exitCode = await main();

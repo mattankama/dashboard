@@ -125,7 +125,7 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [ ] **Task 9: State and the weekly flow**
+- [x] **Task 9: State and the weekly flow**
 
   **Description:** `state.ts` handles the done markers per week and a lock that recovers if left stale. `job.ts` runs the spec's weekly flow over injected effects. `weekly.ts` wires up the real ones and sets exit codes.
 
@@ -144,8 +144,8 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 ---
 
 ### Checkpoint B: after Tasks 7–9
-- [ ] Standard checks pass
-- [ ] Every branch of the spec's weekly flow is covered by a test
+- [x] Standard checks pass
+- [x] Every branch of the spec's weekly flow is covered by a test
 
 ---
 
