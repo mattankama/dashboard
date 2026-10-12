@@ -118,7 +118,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 6: UI: edit in place, pin, archive with undo**
+- [x] **Task 6: UI: tap to edit, swipe to archive, undo**
 
   **Description:** Per `docs/UI.md`: tap an item to edit it in place (text, pin, archive), and swipe left to archive. Archive removes the item and shows an undo toast for about 5 seconds; Undo restores it. Archive is also reachable from the edit view, for mouse and keyboard. Ask Mattan about any interaction detail `docs/UI.md` doesn't settle.
 
