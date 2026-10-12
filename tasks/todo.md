@@ -49,7 +49,7 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [ ] **Task 4: Grouping**
+- [x] **Task 4: Grouping**
 
   **Description:** `groupItems` calls Claude through `@anthropic-ai/sdk` (`claude-sonnet-5-5`, JSON-schema output, `fallbacks: "default"`), validates the answer, and otherwise uses the fallback grouping. Then it orders the groups (largest first) and the items (pinned first, then the API order).
 
