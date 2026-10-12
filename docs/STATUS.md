@@ -4,7 +4,7 @@ _Last updated: 2026-10-11_
 
 ## Phase
 
-**0: Context set up.** No app code yet. Nothing is committed (the git repo is initialized with no commits).
+**1: `apps/web`, planned and not started.** No app code yet. The setup is committed and pushed to `https://github.com/mattankama/dashboard` (private), on branch `main`, which tracks `origin/main`.
 
 ## Done
 
@@ -16,7 +16,7 @@ _Last updated: 2026-10-11_
 
 ## Next task
 
-**Phase 1: `apps/web`.** Plan written (`tasks/plan.md`, `tasks/todo.md`: 11 tasks, 3 checkpoints) and waiting for Mattan's review. Mattan will say when to start building. Before the first `/build`: decide on a baseline commit, and on whether `.agents/` goes in git (open questions in `tasks/plan.md`).
+**Phase 1: `apps/web`.** Plan written (`tasks/plan.md`, `tasks/todo.md`: 11 tasks, 3 checkpoints). **Wait for Mattan to say when to start building**, then `/build` begins with Task 1.
 
 After that:
 - Phase 2: `apps/printer` with `--dry-run`.
@@ -36,6 +36,8 @@ After that:
 - Do items expire after N weeks, or does Mattan archive them by hand?
 
 ## Notes for the next session
+
+- Commits go to `origin` (`github.com/mattankama/dashboard`, private). The skills in `.agents/` are committed.
 
 - **Skills fixed (2026-10-11):** `.agents/skills/` had gone missing, which broke every link in `.claude/skills/`. Restored all 25 with `npx skills experimental_install`; `skills-lock.json` is unchanged. `npx skills` doesn't install the upstream commands (`/spec`, `/plan`, …). `/build` was copied from upstream `.claude/commands/build.md`, with only the plugin prefix `agent-skills:` removed from skill names so they resolve here. It commits after every task, and `/build auto` only finds specs under `spec/`, `SPEC.md` or `docs/SPEC.md`, which is why the spec now lives in `spec/`.
 

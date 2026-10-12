@@ -66,7 +66,7 @@ T4 … T9 ──▶ T10 PWA + polish ──▶ T11 docs + final check
 
 One agent, one session at a time, so the tasks run in order. After Task 3, Tasks 5, 8 and 9 don't depend on each other and could be reordered if a priority changes.
 
-## Open Questions
+## Resolved Questions
 
-1. **A baseline commit before `/build`.** The repo has no commits, and upstream `/build` commits after every task (and `/build auto` stops if anything outside the spec and plan is uncommitted). I suggest one first commit of the setup: `CLAUDE.md`, `docs/`, `spec/`, `tasks/`, `.claude/`, `.gitignore`, `skills-lock.json`, and `apps/web/package.json` + `package-lock.json`. That needs Mattan's OK.
-2. **`.agents/` in git?** Committing the skills means they can't silently vanish again. Ignoring the folder keeps the repo small, and `npx skills experimental_install` restores it from `skills-lock.json`. I lean toward committing it.
+1. **Baseline commit:** done (`5bec3dc`), pushed to `github.com/mattankama/dashboard`.
+2. **`.agents/` in git:** yes, committed.
