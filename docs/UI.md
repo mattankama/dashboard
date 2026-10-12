@@ -15,7 +15,7 @@ A calm, pleasant everyday planner, not a generic "vibe-coded" app. Simple, nothi
 
 ## Decided from the options page (2026-10-11)
 Options page: https://claude.ai/artifact/4XDzBZaW3WPE2JxbcbraZa
-- **Dot-grid journal page:** a faint dot grid behind the list, as in a bullet journal. A muted dash starts each item; a honey ★ replaces it on pinned items. Each mark covers the dot it sits on (Mattan's review of the first screen).
+- **Dot-grid journal page:** a faint dot grid behind the list, as in a bullet journal. A muted dash starts each item; a honey ★ replaces it on pinned items. Each mark covers the dot it sits on, and the text sits on that same line of dots (both from Mattan's reviews).
 - **Serif: Charter** (built into iPhone and Mac; no font files). Labels use the system sans.
 - **Amber: Honey** (`#e2a651`). Page `#1c1814`, text `#ebe1d2`, muted `#a39582`, dots `#4a3e33`.
 - **No categories in the UI.** The API's optional `category` field stays but the UI never sets it, so the sheet's fallback is one list.

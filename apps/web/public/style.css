@@ -11,9 +11,9 @@
   --serif: Charter, "Bitstream Charter", "Charis SIL", Georgia, serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --row: 1.5rem;            /* one line of item text = one dot-grid cell */
-  --dot-offset: 0.3125rem;  /* drops the dots onto the text baseline */
+  --dot-offset: 0.40625rem; /* puts each dot's centre on the text baseline (Charter, 17px, 24px rows) */
   --dot-y: calc(var(--dot-offset) + var(--row) / 2);  /* a dot's centre within its row */
-  --dash-drop: 0.15em;      /* moves the dash from mid-height down onto its dot */
+  --dash-drop: 0.24em;      /* moves the dash from mid-height down onto its dot, on the baseline */
   --gutter: 1rem;
   --page-width: 30rem;
 }
