@@ -45,7 +45,7 @@ Without a key, the sheet is one plain list. With one, Claude groups the items un
 
 ## 4. Put the app online with Cloudflare (20 minutes, free)
 
-**Staying free:** choose only Free plans, and check the total says $0.00 before confirming. Cloudflare asks for a card even then, but doesn't charge. Never upgrade to **Workers Paid** or a paid **Zero Trust** plan. Free plans don't bill for going over their limits: things just stop until the limits reset, and this app uses a tiny fraction of them. **Billing → Subscriptions** in the dashboard should only ever show $0.
+**Staying free:** nothing in this guide needs a card. If Cloudflare asks for one, you've wandered into something paid (or Zero Trust, which this app doesn't use), so back out. The free Workers plan doesn't bill for going over its limits: things just stop until the limits reset, and this app uses a tiny fraction of them. **Billing → Subscriptions** in the dashboard should only ever show $0.
 
 1. Create a free account at `dash.cloudflare.com/sign-up`.
 2. Log in from the Mac (a browser window opens):
@@ -90,35 +90,38 @@ Without a key, the sheet is one plain list. With one, Claude groups the items un
       ```
    **Your app's address** is the `https://dashboard.….workers.dev` line that `npm run deploy` printed in step 3. If it's gone, find it in the Cloudflare dashboard under **Workers & Pages → dashboard**, or run `npm run deploy` again (harmless) to see it.
 
-The app is online now, but its data is locked: it answers "Access isn't configured" until step 5. Your local test items don't move online; you start fresh.
+The app is online now, but locked: it answers "Login isn't set up" until step 5. Your local test items don't move online; you start fresh.
 
-## 5. Lock it to you with Cloudflare Access (15 minutes, free)
+## 5. Choose your password (10 minutes, free)
 
-1. Turn on Access for your app.
-   - **Zero Trust, once:** if Cloudflare asks you to set up Zero Trust first, click **Zero Trust** in the dashboard's left sidebar.
-     - Pick a team name and write it down: it becomes your team address, `https://<team-name>.cloudflareaccess.com`, for part 2.
-     - Choose the **Free** plan. Cloudflare asks for payment details even for Free, but doesn't charge.
-   - **Lock the app:** in **Workers & Pages**, click **dashboard**, open its **Access** tab, and choose **Protect this Worker behind Access**. Then:
-     - choose **All traffic**;
-     - under **Authentication policy**, choose **Cloudflare account** (only people in your Cloudflare account, which is just you);
-     - click **Apply Access**.
-   - **Don't** choose **Email domain** with a public domain like `gmail.com`: that would let anyone with a Gmail address in.
-   - In an older dashboard layout, the same switch is under the Worker's **Settings → Domains & Routes → workers.dev → Enable Cloudflare Access**.
-   - **Check:** open your app's address in a private browser window. You should see a Cloudflare login page instead of the app.
-2. Copy two values into `apps/web/wrangler.jsonc` under `"vars"`:
-   - `ACCESS_TEAM_DOMAIN`: your team address, like `https://<team>.cloudflareaccess.com`. It's under **Zero Trust → Settings**.
-   - `ACCESS_AUD`: the **Application Audience (AUD) Tag**. It's under **Zero Trust → Access → Applications → (the dashboard app)**.
-3. Deploy again and save:
+The app has its own sign-in: one password, which you type once on each device. That device then stays signed in for a year.
+
+1. Put the newest version online (it has the sign-in):
    ```
    cd ~/code/dashboard/apps/web
    npm run deploy
-   git add wrangler.jsonc && git commit -m "Turn on the Access check" && git push
    ```
-4. Let the Mac through Access:
-   - In **Zero Trust → Access → Service credentials → Service Tokens**, create a token named "dashboard-printer". Copy the **Client ID** and **Client Secret**; the secret is shown only once.
-   - In the dashboard app's **Policies**, add a policy with **Action: Service Auth**, including that service token.
-   - In `apps/printer/.env`, set `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`.
-5. On your phone, open the app's address. Log in (Access emails you a code), then in Safari choose **Share → Add to Home Screen**.
+2. Make your password. This prints 24 random characters. Copy them.
+   ```
+   openssl rand -base64 18
+   ```
+   Save it in the **Passwords** app on your Mac: click **+**, then enter your app's address as the website, `Dashboard` as the user name, and paste the password. iCloud syncs it to your iPhone.
+3. Give the same password to Cloudflare: when this asks "Enter a secret value", paste it and press Enter.
+   ```
+   cd ~/code/dashboard/apps/web
+   npx wrangler secret put LOGIN_PASSWORD
+   ```
+4. Give Cloudflare a key for keeping you signed in. You never need to see this one: the command makes it and hands it straight over.
+   ```
+   cd ~/code/dashboard/apps/web
+   openssl rand -hex 32 | npx wrangler secret put SESSION_SECRET
+   ```
+5. On your phone, open your app's address in Safari. You'll see today's date and a **Password** field at the bottom. Tap it, choose your saved password above the keyboard, and tap ↵. Your (empty) page appears.
+6. Choose **Share → Add to Home Screen**, then open the app from your home screen. If it asks for the password, sign in once more: the home-screen app can keep its own sign-in, separate from Safari's.
+
+- **Check:** in a private browser window, your app's address shows only the date and the password field.
+- **Sign every device out:** run part 4 again. A new password (part 3) does the same.
+- **Forgot the password:** do parts 2 and 3 again with a new one.
 
 ## 6. Start the weekly printing (5 minutes)
 
@@ -144,6 +147,7 @@ The app is online now, but its data is locked: it answers "Access isn't configur
 ## If something's off
 
 - `cd ~/code/dashboard/apps/printer && npm run status` first.
+- The app says "Login isn't set up.": step 5's parts 3 and 4 aren't both done, or the password is shorter than 16 characters.
 - The log is `~/Library/Logs/dashboard.log`. Crashes go to `~/Library/Logs/dashboard.launchd.log`.
 - Stop the weekly job: `cd ~/code/dashboard/apps/printer && ./uninstall.sh` (your settings stay).
 - After upgrading Node with nvm, run it again: `cd ~/code/dashboard/apps/printer && ./install.sh`.

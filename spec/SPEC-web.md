@@ -94,7 +94,7 @@ All bodies are JSON. Mutating requests must send `Content-Type: application/json
   "createdAt": "…", "updatedAt": "…", "archivedAt": null }
 ```
 
-### UI routes (Cloudflare Access in Phase 4; open under `wrangler dev`)
+### UI routes (need a signed-in session since Phase 4b; open under `wrangler dev` until a password is set)
 
 | Route | Body | Success | Errors |
 |---|---|---|---|
@@ -274,6 +274,8 @@ _Added and built 2026-10-12. Deploying, changing Cloudflare settings and creatin
 
 **Objective:** the app works from Mattan's phone anywhere, only Mattan can use it, and the Mac job can still reach its routes.
 
+_The Access check and the Mac's service token were replaced by Phase 4b below, after Zero Trust asked for a card._
+
 - **Access check in the Worker** (defense in depth behind Cloudflare Access):
   - Every `/api/*` route except `/api/printer/*` needs a valid `Cf-Access-Jwt-Assertion` JWT: RS256, signed by a key from `https://<team>.cloudflareaccess.com/cdn-cgi/access/certs` (cached), with `aud` containing `ACCESS_AUD`, `iss` equal to the team URL, and not expired.
   - Requests to `localhost` (local dev and tests) skip it. Anywhere else, a missing `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` returns `503`; it never runs open.
@@ -286,3 +288,27 @@ _Added and built 2026-10-12. Deploying, changing Cloudflare settings and creatin
 - Tests cover: a valid JWT; wrong `aud`, `iss` or signature; expired; missing; the `localhost` skip; the fail-closed `503`; printer routes untouched.
 - The service-token headers are tested in `apps/printer`.
 - `npm run build` still bundles. Nothing is deployed.
+
+---
+
+## Phase 4b: a password instead of Cloudflare Access
+
+_Added and built 2026-10-12. Turning on Zero Trust asked Mattan for a card, and he chose to skip it ("Skip Zero Trust, no card"). He also chose the sign-in screen ("password at the bottom")._
+
+**Objective:** only Mattan can use the deployed app, with no paid or card-requiring Cloudflare product, no new dependency and no schema change.
+
+- **`POST /api/login`** with `{ password }` (JSON only; 1–1024 characters; unknown fields rejected). It's compared with `LOGIN_PASSWORD` in constant time.
+  - Right: `204` and `Set-Cookie: __Host-dashboard_session=<expiry>.<HMAC>; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Strict`.
+  - Wrong: `401` `{ "error": "Wrong password" }`, no cookie, and a log line without the password.
+- **The session** is HMAC-SHA256 under `SESSION_SECRET`, over the expiry and the password. It lasts a year, and changing either secret ends every session.
+- **Every `/api/*` route** except `/api/login` and `/api/printer/*` needs a valid session, or gets `401` `{ "error": "Sign in" }`. Printer routes keep their bearer token.
+- **Fails closed:** deployed without both secrets, or with `LOGIN_PASSWORD` under 16 characters or `SESSION_SECRET` under 32, every protected route and `/api/login` answer `503` `{ "error": "Login isn't set up" }`. `localhost` stays open only while neither secret is set.
+- **Headers:** API replies get `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`. `public/_headers` gives the app's files a strict CSP (`default-src 'self'`, no objects, no `<base>`, no framing), `nosniff`, `Referrer-Policy: no-referrer` and a `Permissions-Policy`.
+- **The UI:** any `401` shows the sign-in screen (`docs/UI.md`). Signing in loads the items.
+- **Removed:** the Access JWT check, its `vars`, and the Mac's `CF_ACCESS_*` support.
+- **No rate limit**, on purpose (`docs/DECISIONS.md`).
+
+**Success criteria** (all met):
+- Tests cover: no session; wrong password; the cookie's attributes; a session that works; tampered, expired and old-secret or old-password sessions; how the password is sent; the fail-closed `503`s; `localhost`; printer routes untouched; the API and page headers.
+- Headless Chrome at phone and laptop sizes shows the sign-in screen, a wrong password, staying signed in across a reload, a session ending mid-use, and a console with no errors or CSP reports.
+- `npm test`, `npm run typecheck` and `npm run build` pass in both apps.

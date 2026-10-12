@@ -6,7 +6,7 @@ The Cloudflare Worker (JSON API + static UI) and its D1 database. Spec: `spec/SP
 
 ```
 npm install
-cp .dev.vars.example .dev.vars   # once: local PRINTER_TOKEN (git-ignored)
+cp .dev.vars.example .dev.vars   # once: local PRINTER_TOKEN, optional login (git-ignored)
 npm run db:migrate:local         # once per fresh checkout (local D1 lives in .wrangler/state)
 npm run dev                      # http://localhost:8787
 npm test                         # vitest inside the Workers runtime
@@ -14,12 +14,13 @@ npm run typecheck                # Worker + tests (tsconfig.json), then UI JS (t
 npm run build                    # wrangler deploy --dry-run: bundles only, no account, no upload
 ```
 
-Deploying needs Mattan's OK and account: `npm run deploy` (the first one creates the D1 database and writes its id into `wrangler.jsonc`) and `npm run db:migrate:remote`. The steps are in `docs/SETUP.md`.
+Deploying needs Mattan's OK and account: `npm run deploy` and `npm run db:migrate:remote`. The secrets (`PRINTER_TOKEN`, `LOGIN_PASSWORD`, `SESSION_SECRET`) are set with `npx wrangler secret put`. The steps are in `docs/SETUP.md`.
 
 ## Layout
 
 - `src/index.ts`: URLPattern router. `/api/*` runs here (`run_worker_first`); everything else is `public/`.
-- `src/items.ts`, `src/printer.ts`: route handlers. `src/validate.ts`: pure input checks. `src/db.ts`: all SQL, always bound.
+- `src/auth.ts`: signing in and the session check. `src/items.ts`, `src/printer.ts`: route handlers. `src/validate.ts`: pure input checks. `src/db.ts`: all SQL, always bound.
+- `public/_headers`: the CSP and other headers for the app's files (API replies get theirs in `src/index.ts`).
 - `public/`: the UI. No framework, no build step. `app.js` and `swipe.js` are `// @ts-check` JS; pure helpers in `lib.js` are unit-tested.
 - `migrations/`: D1 schema. Changing it needs Mattan's OK.
 
@@ -28,7 +29,9 @@ Deploying needs Mattan's OK and account: `npm run deploy` (the first one creates
 - **Tests share storage.** `@cloudflare/vitest-plugin` doesn't isolate storage per test, so `test/setup.ts` applies the migrations and clears the tables before every test.
 - **`exports.default.fetch` in tests skips asset routing**, so the Worker passes non-API paths to `env.ASSETS` itself. Its type comes from `Cloudflare.GlobalProps.mainModule` in `src/env.d.ts`.
 - **Printer routes fail closed:** no `PRINTER_TOKEN` gives `503`, a wrong one `401`. Tests set the token in `vitest.config.ts`.
-- **The Access JWT check** (`src/access.ts`) skips `localhost`, so local dev and most tests don't see it. Off `localhost`, empty `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` give `503`. Tests fake the team's certs through `checkAccess`'s `fetchCerts` option; the certs are cached per team, which the router test relies on.
+- **The session check** (`src/auth.ts`) leaves `localhost` open while neither `LOGIN_PASSWORD` nor `SESSION_SECRET` is set, so local dev and most tests don't see it. Anywhere else, missing or short secrets give `503`. Tests set both on a copy of `env`; `vitest.config.ts` blanks them so `.dev.vars` can't leak in.
+- **Trying the sign-in screen locally:** set both in `.dev.vars` (see `.dev.vars.example`) and use Chrome. The cookie is `Secure` with a `__Host-` name, which Chrome keeps on `http://localhost`.
+- **Local D1 data is keyed by `database_id`.** Recording the real id (2026-10-12) moved local dev to a fresh, empty file: run `npm run db:migrate:local` again. The old file stays in `.wrangler/state`.
 - **Phone vs laptop** is decided by `(hover: hover) and (pointer: fine)`. Phone actions are swipes; laptop actions are words on tap.
 - **A delete is sent only when its undo line goes away**, or the view flips, or the page hides (`keepalive`).
 - **npm 12 blocks install scripts** (workerd, esbuild). Their binaries still work; look here first if `wrangler dev` won't start.

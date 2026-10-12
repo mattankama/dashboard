@@ -4,7 +4,7 @@
  Phone / any device                 Cloud (free tier)                     Mac at home
  ┌──────────────┐   HTTPS    ┌─────────────────────────────┐  pull   ┌───────────────────────────┐
  │ Dashboard     │ ────────▶ │ Cloudflare Worker + D1 (SQL) │ ◀────── │ launchd job (hourly check) │
- │ web app (PWA) │           │ behind Cloudflare Access     │  token  │  → Claude API (group only) │
+ │ web app (PWA) │           │ its own password sign-in     │  token  │  → Claude API (group only) │
  └──────────────┘           └─────────────────────────────┘         │  → HTML → PDF (headless    │
                                                                       │    Chrome)                 │
                                                                       │  → lp -d CanonMF4800       │
@@ -52,7 +52,13 @@ docs/           including SETUP.md, Mattan's setup guide
 
 ## API (Worker)
 
-UI routes sit behind Cloudflare Access. As a second layer, the Worker checks Access's signed JWT (`Cf-Access-Jwt-Assertion`) on every `/api/*` route except the printer's. It must be RS256 from the team's keys, with `iss` the team and `aud` the app's `ACCESS_AUD`, and not expired; anything else gets `403`. `localhost` skips the check; deployed without `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD`, the API answers `503`.
+Signing in (`src/auth.ts`): `POST /api/login` with `{ password }` checks it against `LOGIN_PASSWORD` in constant time. The right one gets `204` and a session cookie, `__Host-dashboard_session` (HttpOnly, Secure, SameSite=Strict, Path=/, a year). A wrong one gets `401` "Wrong password". The cookie is `<expiry>.<HMAC-SHA256>` under `SESSION_SECRET`, over the expiry and the password, so nothing is stored. Changing either secret signs every device out.
+
+Every `/api/*` route except `/api/login` and the printer's needs a valid session, or gets `401` "Sign in", which makes the UI show the password field. Deployed without both secrets, or with a password under 16 characters or a secret under 32, the API answers `503` "Login isn't set up". `localhost` stays open until they're set (in `.dev.vars`).
+
+API replies carry `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`. The app's own files get a strict Content-Security-Policy and the other headers in `public/_headers`.
+
+Item routes, for the UI:
 
 - `GET /api/items?status=active|archived`
 - `POST /api/items` with `{ text, category?, pinned? }`
@@ -61,7 +67,7 @@ UI routes sit behind Cloudflare Access. As a second layer, the Worker checks Acc
 
 Active items list pinned first, then newest; archived items most recently archived first. Input is validated (text 1–500 characters, trimmed only; unknown fields rejected), and mutating requests must be `application/json`.
 
-Printer routes use a bearer token (`PRINTER_TOKEN`). Behind Access, the Mac also sends a Cloudflare Access service token (`CF-Access-Client-Id`/`CF-Access-Client-Secret`), allowed by a Service Auth policy:
+Printer routes use a bearer token (`PRINTER_TOKEN`) instead of the password:
 
 - `GET /api/printer/items`: active items only
 - `POST /api/printer/runs`: records a print run (`{ week, status, printedAt?, emailedAt? }`)
@@ -140,6 +146,6 @@ State lives in `~/Library/Application Support/dashboard/` (week markers, alerts,
 | Mac `.env` | `ANTHROPIC_API_KEY` | grouping |
 | Mac `.env` | `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `NOTIFY_TO` | email |
 | Mac `.env` | `PRINT_DAY`, `PRINT_TIME`, `PRINTER_NAME` | schedule and printer (defaults: Sun, 09:00, CanonMF4800) |
-| Mac `.env` | `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | Access service token, to reach the API through Access |
 | `wrangler secret` | `PRINTER_TOKEN` | auth for the printer routes |
-| `wrangler.jsonc` `vars` (not secret) | `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` | which Access team and app the Worker's JWT check expects |
+| `wrangler secret` | `LOGIN_PASSWORD` | the password for signing in (at least 16 characters) |
+| `wrangler secret` | `SESSION_SECRET` | signs session cookies (at least 32 characters); change it to sign every device out |

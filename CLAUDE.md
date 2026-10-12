@@ -21,7 +21,7 @@ Dashboard is **not** a to-do list or a calendar. Mattan already has both. It hol
 | `docs/UI.md` | UI design decisions. Mattan owns UI design: ask before any visual choice not settled there. |
 | `docs/DECISIONS.md` | Why each choice was made. Add an entry when a choice changes. |
 | `docs/STATUS.md` | Current phase, next task, open questions. Update it every session. |
-| `docs/SETUP.md` | Mattan's step-by-step setup guide: Gmail, API key, Cloudflare deploy, Access, install. |
+| `docs/SETUP.md` | Mattan's step-by-step setup guide: Gmail, API key, Cloudflare deploy, password, install. |
 | `apps/web/` | Cloudflare Worker + D1 + phone UI (Phase 1, built). Its own `CLAUDE.md` has commands and gotchas. |
 | `apps/printer/` | Mac weekly job: fetch → group → PDF → print → email, plus its launchd installer. Its own `CLAUDE.md` has commands and gotchas. |
 | `.agents/skills/` | Engineering workflow skills (linked into `.claude/skills/`; the source is `skills-lock.json`). Don't edit them. If they go missing, restore them with `npx skills experimental_install`. |
@@ -32,7 +32,7 @@ Dashboard is **not** a to-do list or a calendar. Mattan already has both. It hol
 ## Stack
 
 - TypeScript everywhere, on Node v24 (installed via nvm). Homebrew and wrangler are not installed.
-- **Web:** Cloudflare Workers + D1 (SQLite), behind Cloudflare Access.
+- **Web:** Cloudflare Workers + D1 (SQLite), with its own password sign-in (not Cloudflare Access, which wanted a card).
 - **Printer job:** Node script on the Mac, run hourly by launchd. It makes the PDF with headless Google Chrome (already installed), prints with `lp -d CanonMF4800`, and emails through Gmail SMTP.
 - **Grouping:** Claude API, `claude-sonnet-5-5`.
 

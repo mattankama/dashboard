@@ -48,7 +48,13 @@ The job always handles the most recent Sunday 09:00 that has passed, so a Mac aw
 `RunAtLoad` plus `StartInterval` 3600 covers sleep, travel and reboots without a separate catch-up mechanism. `install.sh` writes Node's full path into the job (launchd doesn't load nvm) and marks the current week done first, so installing never prints by surprise. Loading it stays Mattan's step.
 
 ### 2026-10-12: The Worker checks Access's JWT itself, with WebCrypto, and fails closed
-Cloudflare Access protects the app at the edge; the Worker also verifies Access's signed token on the item API, in case a route ever ends up outside Access. WebCrypto does the RS256 check in about 60 lines, so `jose` isn't needed. Off `localhost`, missing Access settings mean `503`, never open.
+Cloudflare Access protects the app at the edge; the Worker also verifies Access's signed token on the item API, in case a route ever ends up outside Access. WebCrypto does the RS256 check in about 60 lines, so `jose` isn't needed. Off `localhost`, missing Access settings mean `503`, never open. _Replaced below by the app's own password._
 
 ### 2026-10-12: Access on the free workers.dev address, with a service token for the Mac
-No custom domain is needed: Access can protect a Worker's `workers.dev` address directly. The Mac job gets through with an Access service token (two headers), plus the printer's own bearer token.
+No custom domain is needed: Access can protect a Worker's `workers.dev` address directly. The Mac job gets through with an Access service token (two headers), plus the printer's own bearer token. _Replaced below by the app's own password._
+
+### 2026-10-12: The Worker has its own password instead of Cloudflare Access
+Turning on Zero Trust asked for a payment card and permission to charge usage beyond the free limits, and Mattan chose not to give one. The Worker now signs him in itself: one password (`LOGIN_PASSWORD`, a wrangler secret) gets a signed session cookie that lasts a year. The cookie is an HMAC under `SESSION_SECRET` of its expiry and the password, so there's no user table, session store or new dependency, and Workers + D1 still need no card. Sessions can't be revoked one at a time. Changing either secret signs every device out, which suits one person with a phone and a laptop. Missing or short secrets mean `503`, never open. The printer routes keep their own bearer token. Mattan chose the sign-in screen (`docs/UI.md`).
+
+### 2026-10-12: No rate limit on signing in, on purpose
+The Workers rate-limiting binding's terms on the free plan weren't confirmed, and a counter in D1 would change the schema. Instead the password must be at least 16 characters (the guide generates 24 random ones), and the free plan's 100,000 requests a day caps guessing far below what such a password would need. Wrong passwords are logged (without the password) in Workers Logs. Revisit if the password ever gets weaker or the app gets more users.
