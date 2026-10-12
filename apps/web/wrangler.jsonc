@@ -1,24 +1,33 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "dashboard",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-10-01",
-  "observability": { "enabled": true },
-  "assets": {
-    "directory": "./public",
-    "binding": "ASSETS",
-    // Only the API runs the Worker; every other path is served straight from public/.
-    "run_worker_first": ["/api/*"]
-  },
-  "d1_databases": [
-    // No database_id yet: the first `npm run deploy` creates the database and writes
-    // its id here (commit that change). Local dev and tests don't need it.
-    { "binding": "DB", "database_name": "dashboard", "migrations_dir": "migrations" }
-  ],
-  "vars": {
-    // Cloudflare Access (docs/SETUP.md). Not secrets. While they're empty, the
-    // deployed API answers 503 instead of running open; localhost isn't affected.
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": ""
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "dashboard",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-01",
+	"observability": {
+		"enabled": true
+	},
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS",
+		// Only the API runs the Worker; every other path is served straight from public/.
+		"run_worker_first": [
+			"/api/*"
+		]
+	},
+	"d1_databases": [
+		// No database_id yet: the first `npm run deploy` creates the database and writes
+		// its id here (commit that change). Local dev and tests don't need it.
+		{
+			"binding": "DB",
+			"database_name": "dashboard",
+			"migrations_dir": "migrations",
+			"database_id": "991512c6-7bd0-4c69-9a6f-123c96faf985"
+		}
+	],
+	"vars": {
+		// Cloudflare Access (docs/SETUP.md). Not secrets. While they're empty, the
+		// deployed API answers 503 instead of running open; localhost isn't affected.
+		"ACCESS_TEAM_DOMAIN": "",
+		"ACCESS_AUD": ""
+	}
 }
