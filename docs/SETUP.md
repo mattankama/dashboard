@@ -45,6 +45,8 @@ Without a key, the sheet is one plain list. With one, Claude groups the items un
 
 ## 4. Put the app online with Cloudflare (20 minutes, free)
 
+**Staying free:** choose only Free plans, and check the total says $0.00 before confirming. Cloudflare asks for a card even then, but doesn't charge. Never upgrade to **Workers Paid** or a paid **Zero Trust** plan. Free plans don't bill for going over their limits: things just stop until the limits reset, and this app uses a tiny fraction of them. **Billing → Subscriptions** in the dashboard should only ever show $0.
+
 1. Create a free account at `dash.cloudflare.com/sign-up`.
 2. Log in from the Mac (a browser window opens):
    ```
