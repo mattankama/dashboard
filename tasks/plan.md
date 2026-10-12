@@ -15,7 +15,7 @@ All of these come from the approved spec; they're repeated here because they sha
 - **Plain Worker, hand-written router.** `src/index.ts` sends `/api/*` to handlers and everything else to static assets. No Hono.
 - **Static UI with no build step.** `public/app.js` is `// @ts-check` JS, checked by `tsc` along with the Worker.
 - **All SQL lives in `src/db.ts`**, always with bound parameters. Validation in `src/validate.ts` is pure functions returning `{ ok, value | message }`.
-- **Tests run in the Workers runtime** (`@cloudflare/vitest-pool-workers`) against local D1, with migrations applied before tests.
+- **Tests run in the Workers runtime** (`@cloudflare/vitest-plugin`) against local D1, with migrations applied before tests.
 - **`npm run build` is `wrangler deploy --dry-run`**, which bundles the Worker without an account. Upstream `/build` runs the build after every task, and this gives it a real compile check.
 - **The UI follows `docs/UI.md`;** Mattan decides open design questions (asked at the start of Task 4).
 - **Item text is stored trimmed and otherwise untouched,** and rendered only with `textContent`.
@@ -56,7 +56,7 @@ T4 … T9 ──▶ T10 PWA + polish ──▶ T11 docs + final check
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| `@cloudflare/vitest-pool-workers` 0.23 with vitest 4 may configure differently from what I remember (D1 migrations in tests, config entry point) | High: blocks all tests | Task 1 is test setup only. Use `source-driven-development` and follow the current Cloudflare docs, not memory. |
+| ~~The Workers test integration may configure differently from what I remember~~ **Resolved in Task 1:** the package was renamed to `@cloudflare/vitest-plugin`; set up from Cloudflare's official examples | — | — |
 | TypeScript 7 (the new native compiler) may handle JSDoc in `.js` files differently | Med: `app.js` typecheck could fail or be weaker | Checked in Task 4. Fallback: pin `typescript` to the last 6.x for checking JS. That's a dependency change, so ask Mattan first. |
 | Worker vs static-asset routing: `/api/*` must reach the Worker and everything else the assets | Med | Settled in Task 1 from the docs (`assets` config with an `ASSETS` binding or `run_worker_first`), with a test for each side. |
 | npm 12 blocked the install scripts for `workerd` and `esbuild` | Low | Both binaries were confirmed to run. If `wrangler dev` or tests fail on a binary, look here first. |

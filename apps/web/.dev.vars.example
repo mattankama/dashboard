@@ -1,0 +1,2 @@
+# Copy to .dev.vars (git-ignored) for local dev. Any value works locally.
+PRINTER_TOKEN=dev-token

@@ -7,7 +7,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 1: Worker toolchain and test harness**
+- [x] **Task 1: Worker toolchain and test harness**
 
   **Description:** Set up the Worker so that it runs under `wrangler dev`, builds, typechecks, and has a test runner working inside the Workers runtime. The only behavior is a JSON 404 for unknown `/api/*` paths and a placeholder `index.html`. Check the current Cloudflare docs for the vitest pool config, Worker types and static-asset routing before writing config (`source-driven-development`).
 

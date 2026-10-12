@@ -19,3 +19,6 @@ Mattan wants Claude to look over the items each week but not be obtrusive. It gr
 
 ### 2026-10-11: UI design is Mattan's call
 Mattan wants a UI that doesn't feel generic, so Claude asks before making any visual choice instead of deciding. Settled so far: dark theme only, a warm amber accent, paper-planner type, the add field at the bottom, swipe to archive and tap to edit, and no buttons that could be hidden away. Details and the remaining questions are in `docs/UI.md`.
+
+### 2026-10-11: `@cloudflare/vitest-plugin` instead of `@cloudflare/vitest-pool-workers`
+Cloudflare renamed the Workers test integration, and the old package is deprecated with no further updates. Mattan approved the swap. It's the same team and the same API style (`cloudflareTest()` plugin, `env`/`exports` from `cloudflare:workers`). It also dropped the older wrangler copy the old package pulled in, which cleared `npm audit`.

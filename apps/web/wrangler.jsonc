@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dashboard",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    // Only the API runs the Worker; every other path is served straight from public/.
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    // database_id is added at deploy time (Phase 4); local dev and tests don't need it.
+    { "binding": "DB", "database_name": "dashboard", "migrations_dir": "migrations" }
+  ]
+}

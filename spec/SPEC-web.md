@@ -51,7 +51,7 @@ Build the place where items live and the quickest possible way to add them from 
 | `wrangler` 4.x | Local dev, D1 migrations, later deploy. Pinned in `package.json` instead of ad-hoc `npx`, so every run uses the same version. |
 | `typescript` 7.x | Typecheck the Worker and the UI script. |
 | `@cloudflare/workers-types` | Types for `D1Database`, `Request`, etc. (or `wrangler types`-generated types, if the docs now recommend that instead; checked at implementation time) |
-| `vitest` 4.1.x + `@cloudflare/vitest-pool-workers` 0.23.x | Runs tests inside the real Workers runtime against local D1. The pool requires vitest `^4.1.0`, so not vitest 5. |
+| `vitest` 4.1.x + `@cloudflare/vitest-plugin` 1.4.x | Runs tests inside the real Workers runtime against local D1. (Replaced the deprecated `@cloudflare/vitest-pool-workers`, its renamed successor.) |
 
 No runtime dependencies.
 
@@ -231,7 +231,7 @@ export async function createItem(req: Request, env: Env): Promise<Response> {
 
 ## Testing Strategy
 
-- **Framework:** vitest with `@cloudflare/vitest-pool-workers`, so tests run in the Workers runtime against a real local D1 that's migrated before each test file and isolated per test.
+- **Framework:** vitest with `@cloudflare/vitest-plugin`, so tests run in the Workers runtime against a real local D1 that's migrated before each test file and isolated per test.
 - **Route tests** (`test/items.test.ts`, `test/printer.test.ts`) call the Worker's `fetch` and check status codes, bodies, and the database afterwards. They cover each route's happy path, every validation rule, `404`/`405`/`415`, ordering, archive/restore, and the printer token cases (missing, wrong, right, not configured).
 - **Pure unit tests** (`test/validate.test.ts`) for the validation edge cases (whitespace, length limits, unknown fields, wrong types).
 - **Test-first** for the Worker (`test-driven-development`): write the failing route test, then the code.
