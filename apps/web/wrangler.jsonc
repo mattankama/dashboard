@@ -11,7 +11,14 @@
     "run_worker_first": ["/api/*"]
   },
   "d1_databases": [
-    // database_id is added at deploy time (Phase 4); local dev and tests don't need it.
+    // No database_id yet: the first `npm run deploy` creates the database and writes
+    // its id here (commit that change). Local dev and tests don't need it.
     { "binding": "DB", "database_name": "dashboard", "migrations_dir": "migrations" }
-  ]
+  ],
+  "vars": {
+    // Cloudflare Access (docs/SETUP.md). Not secrets. While they're empty, the
+    // deployed API answers 503 instead of running open; localhost isn't affected.
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": ""
+  }
 }

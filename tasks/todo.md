@@ -21,7 +21,7 @@ Never load launchd, deploy, print or email in these tasks.
   - Tests use generated keys and mocked certs.
 - [x] **Task 4: Service token from the Mac**
   - `CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET` (both or neither) are sent on printer API requests. Tested; added to `.env.example`.
-- [ ] **Task 5: Deploy scripts**
+- [x] **Task 5: Deploy scripts**
   - `npm run deploy`, `npm run db:migrate:remote`, and `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` `vars` placeholders. `npm run build` still bundles.
 - [ ] **Task 6: Setup guide and docs**
   - `docs/SETUP.md` gives Mattan's steps in order.
