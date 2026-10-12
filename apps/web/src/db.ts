@@ -1,4 +1,4 @@
-import type { ItemPatch, ItemStatus, NewItem } from "./validate";
+import type { ItemPatch, ItemStatus, NewItem, NewRun, RunStatus } from "./validate";
 
 export interface Item {
   id: string;
@@ -99,4 +99,41 @@ export async function updateItem(db: D1Database, id: string, patch: ItemPatch): 
 export async function deleteItem(db: D1Database, id: string): Promise<boolean> {
   const { meta } = await db.prepare("DELETE FROM items WHERE id = ?").bind(id).run();
   return meta.changes > 0;
+}
+
+export interface Run {
+  id: string;
+  week: string;
+  status: RunStatus;
+  printedAt: string | null;
+  emailedAt: string | null;
+  createdAt: string;
+}
+
+interface RunRow {
+  id: string;
+  week: string;
+  status: RunStatus;
+  printed_at: string | null;
+  emailed_at: string | null;
+  created_at: string;
+}
+
+export async function insertRun(db: D1Database, input: NewRun): Promise<Run> {
+  const row = await db
+    .prepare(
+      `INSERT INTO print_runs (id, week, status, printed_at, emailed_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?) RETURNING *`,
+    )
+    .bind(crypto.randomUUID(), input.week, input.status, input.printedAt, input.emailedAt, new Date().toISOString())
+    .first<RunRow>();
+  if (row === null) throw new Error("INSERT ... RETURNING returned no row");
+  return {
+    id: row.id,
+    week: row.week,
+    status: row.status,
+    printedAt: row.printed_at,
+    emailedAt: row.emailed_at,
+    createdAt: row.created_at,
+  };
 }

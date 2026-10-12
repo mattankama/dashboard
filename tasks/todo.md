@@ -173,7 +173,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 9: Printer routes with bearer token**
+- [x] **Task 9: Printer routes with bearer token**
 
   **Description:** `GET /api/printer/items` (active items, same shape and order) and `POST /api/printer/runs` (`{ week, status, printedAt?, emailedAt? }`). Both require `Authorization: Bearer <PRINTER_TOKEN>`, compared in constant time. If no token is configured, they return `503`, never open access. The UI routes don't accept the token, and the printer routes don't serve anything without it.
 

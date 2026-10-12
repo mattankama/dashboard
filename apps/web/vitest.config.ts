@@ -9,8 +9,8 @@ export default defineConfig(async () => {
     plugins: [
       cloudflareTest({
         wrangler: { configPath: "./wrangler.jsonc" },
-        // Test-only binding so the setup file can apply the real migrations.
-        miniflare: { bindings: { TEST_MIGRATIONS: migrations } },
+        // Test-only bindings: the real migrations for the setup file, and a printer token.
+        miniflare: { bindings: { TEST_MIGRATIONS: migrations, PRINTER_TOKEN: "test-printer-token" } },
       }),
     ],
     test: { setupFiles: ["./test/setup.ts"] },

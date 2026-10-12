@@ -1,5 +1,6 @@
 import { error } from "./http";
 import { createItem, getItems, patchItem, removeItem } from "./items";
+import { checkPrinterToken, createRun, getPrinterItems } from "./printer";
 
 type Handler = (request: Request, env: Env, params: Record<string, string | undefined>) => Promise<Response>;
 
@@ -11,9 +12,17 @@ interface Route {
 const routes: Route[] = [
   { pattern: new URLPattern({ pathname: "/api/items" }), methods: { GET: getItems, POST: createItem } },
   { pattern: new URLPattern({ pathname: "/api/items/:id" }), methods: { PATCH: patchItem, DELETE: removeItem } },
+  { pattern: new URLPattern({ pathname: "/api/printer/items" }), methods: { GET: getPrinterItems } },
+  { pattern: new URLPattern({ pathname: "/api/printer/runs" }), methods: { POST: createRun } },
 ];
 
 async function handleApi(request: Request, env: Env): Promise<Response> {
+  // Every printer route needs the bearer token, checked before anything else.
+  if (new URL(request.url).pathname.startsWith("/api/printer/")) {
+    const refused = await checkPrinterToken(request, env);
+    if (refused) return refused;
+  }
+
   for (const route of routes) {
     const match = route.pattern.exec(request.url);
     if (!match) continue;

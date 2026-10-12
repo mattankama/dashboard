@@ -115,3 +115,49 @@ export function validateStatus(param: string | null): Result<ItemStatus> {
   if (param === "archived") return { ok: true, value: "archived" };
   return { ok: false, message: "status must be active or archived" };
 }
+
+export type RunStatus = "printed" | "emailed_only" | "failed";
+
+export interface NewRun {
+  week: string;
+  status: RunStatus;
+  printedAt: string | null;
+  emailedAt: string | null;
+}
+
+const RUN_FIELDS = new Set(["week", "status", "printedAt", "emailedAt"]);
+const RUN_STATUSES = new Set<string>(["printed", "emailed_only", "failed"]);
+// ISO week, e.g. 2026-W41 (weeks 01-53).
+const ISO_WEEK = /^\d{4}-W(0[1-9]|[1-4]\d|5[0-3])$/;
+const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})$/;
+
+function validateTimestamp(name: string, value: unknown): Result<string | null> {
+  if (value === undefined || value === null) return { ok: true, value: null };
+  if (typeof value !== "string" || !ISO_DATE_TIME.test(value) || Number.isNaN(Date.parse(value))) {
+    return { ok: false, message: `${name} must be an ISO 8601 date-time` };
+  }
+  return { ok: true, value };
+}
+
+export function validateRun(body: unknown): Result<NewRun> {
+  if (!isObject(body)) return { ok: false, message: "Body must be a JSON object" };
+
+  const unknown = unknownField(body, RUN_FIELDS);
+  if (unknown !== undefined) return { ok: false, message: `Unknown field: ${unknown}` };
+
+  if (typeof body.week !== "string" || !ISO_WEEK.test(body.week)) {
+    return { ok: false, message: "week must be an ISO week like 2026-W41" };
+  }
+  if (typeof body.status !== "string" || !RUN_STATUSES.has(body.status)) {
+    return { ok: false, message: "status must be printed, emailed_only or failed" };
+  }
+  const printedAt = validateTimestamp("printedAt", body.printedAt);
+  if (!printedAt.ok) return printedAt;
+  const emailedAt = validateTimestamp("emailedAt", body.emailedAt);
+  if (!emailedAt.ok) return emailedAt;
+
+  return {
+    ok: true,
+    value: { week: body.week, status: body.status as RunStatus, printedAt: printedAt.value, emailedAt: emailedAt.value },
+  };
+}
