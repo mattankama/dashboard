@@ -149,7 +149,7 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [ ] **Task 10: Docs and final check**
+- [x] **Task 10: Docs and final check**
 
   **Description:** Write `apps/printer/CLAUDE.md`, the root `CLAUDE.md` commands, the `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` updates, and `docs/STATUS.md` with Mattan's checklist. Then check the spec's success criteria from a clean clone.
 
@@ -162,5 +162,5 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 ---
 
 ### Checkpoint C: Phase 2 complete
-- [ ] All spec success criteria met
-- [ ] Checklist for Mattan is complete
+- [x] All spec success criteria met
+- [x] Checklist for Mattan is complete

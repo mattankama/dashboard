@@ -22,7 +22,7 @@ Dashboard is **not** a to-do list or a calendar. Mattan already has both. It hol
 | `docs/DECISIONS.md` | Why each choice was made. Add an entry when a choice changes. |
 | `docs/STATUS.md` | Current phase, next task, open questions. Update it every session. |
 | `apps/web/` | Cloudflare Worker + D1 + phone UI (Phase 1, built). Its own `CLAUDE.md` has commands and gotchas. |
-| `apps/printer/` | *(not built yet)* Mac weekly job: fetch → group → PDF → print → email |
+| `apps/printer/` | Mac weekly job: fetch → group → PDF → print → email (Phase 2, built; launchd is Phase 3). Its own `CLAUDE.md` has commands and gotchas. |
 | `.agents/skills/` | Engineering workflow skills (linked into `.claude/skills/`; the source is `skills-lock.json`). Don't edit them. If they go missing, restore them with `npx skills experimental_install`. |
 | `.claude/commands/build.md` | `/build`, copied from upstream agent-skills (only the `agent-skills:` prefix removed from skill names). Don't edit it. |
 | `spec/` | Approved specs, one per module: `SPEC-<module>.md` (e.g. `SPEC-web.md`) |
@@ -49,7 +49,17 @@ npm run typecheck
 npm run build                    # bundle only (wrangler deploy --dry-run), no account
 ```
 
-Add `apps/printer` commands here when it's built (`weekly --dry-run`, etc.).
+**`apps/printer`** (run inside `apps/printer/`; details in `apps/printer/CLAUDE.md`):
+
+```
+npm install
+cp .env.example .env            # once; placeholders work for dry runs
+npm run dry-run                 # out/weekly-<Sunday>.pdf, no printing or email
+npm run dry-run -- --sample     # the same with built-in example items
+npm test
+npm run typecheck
+npm run weekly                  # the real run: prints and emails when due (ask Mattan first)
+```
 
 ## Product rule: the in-app AI only groups
 

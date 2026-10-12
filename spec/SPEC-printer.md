@@ -1,6 +1,6 @@
 # Spec: `printer` (Phase 2: the weekly job, with `--dry-run`)
 
-_Status: **written 2026-10-11 under Mattan's instruction to finish Phase 2 without questions.** Every assumption below is listed in the checklist in `docs/STATUS.md` for Mattan to confirm or change._
+_Status: **built and checked 2026-10-11**, under Mattan's instruction to finish Phase 2 without questions. Every assumption below is on the checklist in `docs/STATUS.md` for Mattan to confirm or change._
 
 Module id: `printer`. It consumes the `web` module's printer routes (`spec/SPEC-web.md`).
 

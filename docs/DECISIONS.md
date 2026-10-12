@@ -31,3 +31,15 @@ One screen and seven routes don't need them. The UI is static files with `// @ts
 
 ### 2026-10-11: A delete waits for its undo line
 Mattan chose to delete without a confirmation, plus an undo line. So nothing is sent until the line goes away (or the view flips, or the page is hidden, using `keepalive`), and an undone delete never reaches the server.
+
+### 2026-10-11: The print job runs TypeScript directly on Node 24, with no build step
+Node 24 strips the types itself, has a test runner (`node --test`), `fetch`, and a `.env` loader built in. So `apps/printer` needs no bundler, test framework or dotenv. `tsc --noEmit` still checks the types. Dev-only packages: `typescript`, `@types/node`.
+
+### 2026-10-11: `@anthropic-ai/sdk` is the print job's only runtime package
+The Claude API skill requires the official SDK in a TypeScript project, rather than raw `fetch`. Mattan asked for Phase 2 without questions, so this is on the checklist in `docs/STATUS.md` to approve after the fact.
+
+### 2026-10-11: Email through macOS's `curl`, not a mail library
+`curl` is built into macOS and speaks SMTPS. The app password reaches it on stdin, so it never appears in the process list. That avoids adding nodemailer (or similar) to maintain.
+
+### 2026-10-11: When the weekly sheet happens (Phase 2 assumptions)
+The job always handles the most recent Sunday 09:00 that has passed, so a Mac away on Sunday prints the sheet on its next run at home; older missed weeks are skipped. An unreachable printer is retried hourly, and after 24 hours the PDF is emailed instead. A week with no active items sends nothing. Lasting problems (missing settings, the API, Chrome) alert once a week, not every hour. All of these are on Mattan's checklist to confirm.

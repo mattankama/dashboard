@@ -14,13 +14,14 @@
 
 Adding items has to work from anywhere, even when the Mac is asleep, so storage lives in the cloud. Printing has to happen on the home network, so it runs on the Mac.
 
-## Repo layout (planned)
+## Repo layout
 
 ```
 apps/web/       Cloudflare Worker: API + static UI (public/), D1 migrations, wrangler.jsonc
-apps/printer/   Mac weekly job: fetch, group, render, print, email
-  launchd/      org.dashboard.weekly.plist
-  install.sh    copies the plist to ~/Library/LaunchAgents and loads it
+apps/printer/   Mac weekly job: fetch, group, render, print, email (src/*.ts, run directly by Node 24)
+  launchd/      org.dashboard.weekly.plist             (Phase 3, not built yet)
+  install.sh    copies the plist to ~/Library/LaunchAgents and loads it (Phase 3)
+spec/           one approved spec per module
 docs/
 ```
 
@@ -76,37 +77,41 @@ Static HTML, CSS and `// @ts-check` JavaScript, no framework or build step. Phon
 launchd starts it **every hour**. Every run is safe to repeat:
 
 ```
+take the lock (another run going → exit)
+target = the most recent Sun 09:00 that has passed; week = its ISO week (Monday catches up)
 if this week's marker exists                 → exit (already done)
-if now < target time (default Sun 09:00)     → exit
+if settings are missing                      → alert once a week, exit
 build sheet:
-  items  = fetch active items
+  items  = fetch active items               (none → mark done, nothing goes out)
   groups = claudeGroup(items)  ── on any error/invalid output ──▶ fallbackGroup(items)
   html   = render(groups)
-  pdf    = chrome --headless --print-to-pdf
-if printer reachable:
-  lp -d CanonMF4800 pdf → wait for lpstat completion
-  email "Your dashboard printed" with PDF attached
-  write marker, record run
+  pdf    = chrome --headless --print-to-pdf, fitted to one page (max two)
+if printer reachable and the print job finishes (else cancel it):
+  email "Your dashboard printed" with PDF attached (failure → macOS notification)
+  write marker, record run (printed)
 else if now > target + 24h:
   email "Couldn't reach the printer; here's your sheet" with PDF attached
-  write marker, record run (emailed_only)
+  write marker, record run (emailed_only); if that email fails too → notification, record failed
 else:
   log and exit; retry next hour
+API or Chrome failures retry hourly and alert once after 24h.
 ```
 
-Flags: `--dry-run` (write `out/weekly-YYYY-MM-DD.pdf` only), `--force` (ignore marker and target time).
+Flags: `--dry-run` (write `out/weekly-YYYY-MM-DD.pdf` only), `--force` (ignore the marker), `--sample` (example items; implies `--dry-run`).
+
+State lives in `~/Library/Application Support/dashboard/` (week markers, alerts, each week's PDF, the lock, a `last-run` heartbeat); the log is `~/Library/Logs/dashboard.log`. Email goes through macOS's `curl` to Gmail SMTPS (password on stdin), and the last-resort alert is an `osascript` notification.
 
 ### Claude grouping
 
 - Model: `claude-sonnet-5-5`. One call per week, so cost is negligible.
 - Input: item ids, text and categories (if any).
-- Output: structured JSON `{ groups: [{ heading, itemIds[] }] }`.
+- Output: structured JSON `{ groups: [{ heading, itemIds[] }] }`, enforced by a JSON schema (`output_config.format`), via `@anthropic-ai/sdk` with Anthropic's refusal fallback (`fallbacks: "default"`).
 - Instructions:
   - Group similar items.
   - Use short, plain headings.
   - Don't rewrite, summarize or comment.
   - Every id appears exactly once.
-- Validate the output by checking that the set of ids equals the input set exactly. Anything else counts as a failure.
+- Validate the output by checking that the set of ids equals the input set exactly, and that headings are 1–60 characters. Anything else counts as a failure.
 - `fallbackGroup`: group by `category` (uncategorized items go under "Other"). If there are no categories, use one list.
 - Pinned items stay at the top of their group.
 - Item text is untrusted user data. Send it inside clearly delimited data, never as part of the instructions. The id-set validation also catches any output that drops or invents items.
@@ -116,7 +121,8 @@ Flags: `--dry-run` (write `out/weekly-YYYY-MM-DD.pdf` only), `--force` (ignore m
 - macOS CUPS queue: **`CanonMF4800`** (Canon imageCLASS MF4800 series, mono laser). It's reached over Wi-Fi using AirPrint/Bonjour: `dnssd://CanonMF4800._pdl-datastream._tcp.local.`
 - It's already the system default printer, so no driver install is needed.
 - Print with `lp -d CanonMF4800 -o media=Letter <file.pdf>`, then check the job with `lpstat -W not-completed`.
-- Reachability: `lpstat -p CanonMF4800` plus a Bonjour lookup (`dns-sd`/`ippfind`). Off the home network the lookup fails, and the job waits for the next hour.
+- Reachability: `lpstat -p CanonMF4800` (enabled) plus a 3-second Bonjour lookup (`dns-sd -L`) of the name in its device URI. Off the home network the lookup fails, and the job waits for the next hour.
+- A job that hasn't finished within 5 minutes is cancelled, so it can't print twice when the next run retries.
 - No cloud printing, so the job must run on a device on the home network.
 
 ### Mac reliability
