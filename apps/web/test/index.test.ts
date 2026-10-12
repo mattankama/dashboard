@@ -18,6 +18,20 @@ describe("routing", () => {
     expect(res.headers.get("Content-Type")).toContain("text/html");
     expect(await res.text()).toContain("<title>Dashboard</title>");
   });
+
+  it("serves the app's script and styles", async () => {
+    const assets = [
+      ["/app.js", "javascript"],
+      ["/lib.js", "javascript"],
+      ["/style.css", "text/css"],
+    ];
+    for (const [path, type] of assets) {
+      const res = await exports.default.fetch(`http://localhost${path}`);
+
+      expect(res.status, path).toBe(200);
+      expect(res.headers.get("Content-Type"), path).toContain(type);
+    }
+  });
 });
 
 describe("unexpected errors", () => {

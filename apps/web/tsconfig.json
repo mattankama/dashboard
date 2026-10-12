@@ -5,6 +5,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "types": ["@cloudflare/workers-types", "@cloudflare/vitest-plugin/types"],
+    "allowJs": true,
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.public.json",
     "build": "wrangler deploy --dry-run --outdir .wrangler/dist",
     "db:migrate:local": "wrangler d1 migrations apply dashboard --local"
   },

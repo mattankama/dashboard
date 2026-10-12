@@ -1,0 +1,203 @@
+/* Dashboard: a dot-grid journal page at night. Decisions live in docs/UI.md. */
+:root {
+  color-scheme: dark;
+  --desk: #13100d;      /* around the page on wide screens */
+  --paper: #1c1814;     /* the page */
+  --ink: #ebe1d2;
+  --ink-muted: #a39582;
+  --rule: #2f2721;
+  --dot: #4a3e33;
+  --honey: #e2a651;     /* the one accent: stars, caret, focus, save arrow */
+  --serif: Charter, "Bitstream Charter", "Charis SIL", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --row: 1.5rem;            /* one line of item text = one dot-grid cell */
+  --dot-offset: 0.3125rem;  /* drops the dots onto the text baseline */
+  --gutter: 1rem;
+  --page-width: 30rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  background: var(--desk);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  line-height: var(--row);
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+  background: var(--paper);
+}
+
+@media (min-width: 32rem) {
+  .page { border-inline: 1px solid var(--rule); }
+}
+
+.head {
+  padding: calc(env(safe-area-inset-top, 0px) + 2 * var(--row)) var(--gutter) var(--row);
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 400;
+  line-height: var(--row);
+}
+
+/* The dot grid. Dots sit at each cell's centre column, on the text baseline. */
+.sheet {
+  flex: 1;
+  padding: 0 var(--gutter) calc(2 * var(--row));
+  background-image: radial-gradient(circle at center, var(--dot) 0 1.1px, transparent 1.6px);
+  background-size: var(--row) var(--row);
+  background-position: var(--gutter) var(--dot-offset);
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--row);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: var(--row) 1fr;
+}
+
+.mark {
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.pinned .mark { color: var(--honey); }
+
+.text {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  margin: 0;
+  padding-left: var(--row);
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.bar {
+  position: sticky;
+  bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border-top: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.bar:focus-within { border-top-color: color-mix(in srgb, var(--honey) 55%, var(--rule)); }
+
+.notice {
+  margin: 0;
+  padding: 0.75rem var(--gutter) 0 calc(var(--gutter) + var(--row));
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.retry {
+  padding: 0.5rem 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--honey);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.add {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem calc(var(--gutter) + var(--row));
+}
+
+.add textarea {
+  flex: 1;
+  min-width: 0;
+  max-height: calc(6 * var(--row) + 1.25rem);
+  margin: 0;
+  padding: 0.625rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--honey);
+  font: inherit;
+  line-height: var(--row);
+  resize: none;
+}
+
+.add textarea::placeholder {
+  color: var(--ink-muted);
+  font-style: italic;
+  opacity: 1;
+}
+
+/* The caret and the bar's honey top rule show focus here. */
+.add textarea:focus { outline: none; }
+
+.save {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-muted);
+}
+
+.save:enabled {
+  color: var(--honey);
+  cursor: pointer;
+}
+
+.save:focus-visible,
+.retry:focus-visible {
+  outline: 2px solid var(--honey);
+  outline-offset: 2px;
+}
+
+.save svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

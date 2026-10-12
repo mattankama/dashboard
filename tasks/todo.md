@@ -70,7 +70,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 4: UI: add and list items**
+- [x] **Task 4: UI: add and list items**
 
   **Description:** First, ask Mattan the open questions in `docs/UI.md` that affect this screen, and record the answers there. Then build the first real screen to `docs/UI.md`: the heading, the active list and the add field at the bottom (return saves; no Add button). The new item appears without a reload, and the field clears and keeps focus. On failure the text stays and an error shows. Item text is rendered with `textContent` only. Use `frontend-ui-engineering` + `frontend-design`.
 
