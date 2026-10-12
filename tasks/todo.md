@@ -1,242 +1,166 @@
-# Tasks: `web` (Phase 1)
+# Tasks: `printer` (Phase 2)
 
-Spec: `spec/SPEC-web.md` · Plan: `tasks/plan.md`
+Spec: `spec/SPEC-printer.md` · Plan: `tasks/plan.md`
 
-All commands run from `apps/web/`. "Standard checks" below means all three of these pass:
-`npm test` · `npm run typecheck` · `npm run build`
+All commands run from `apps/printer/`. "Standard checks" = `npm test` · `npm run typecheck` · `npm run build`.
+Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [x] **Task 1: Worker toolchain and test harness**
+- [ ] **Task 1: Scaffold, config, log, CLI flags**
 
-  **Description:** Set up the Worker so that it runs under `wrangler dev`, builds, typechecks, and has a test runner working inside the Workers runtime. The only behavior is a JSON 404 for unknown `/api/*` paths and a placeholder `index.html`. Check the current Cloudflare docs for the vitest pool config, Worker types and static-asset routing before writing config (`source-driven-development`).
+  **Description:** `apps/printer` as a standalone ESM package that Node 24 runs as TypeScript directly. `config.ts` loads `.env` (`process.loadEnvFile`), applies defaults, and reports what's missing for a real run. `log.ts` appends timestamped lines to the log file. `weekly.ts` parses `--dry-run`, `--force`, `--sample`, `--help`.
 
   **Acceptance criteria:**
-  - `package.json` has the scripts `dev`, `test`, `typecheck`, `build`, `db:migrate:local`.
-  - `wrangler.jsonc` declares the Worker, a D1 binding `DB` (database `dashboard`) and an assets directory `public/`; `/api/*` reaches the Worker and `/` serves `public/index.html`.
-  - `GET /api/nope` returns `404 {"error":"Not found"}` with `Content-Type: application/json`.
+  - Defaults match the spec; `PRINT_DAY`/`PRINT_TIME`/`NOTIFY_TO` are validated (one address only).
+  - Missing real-run settings are listed by name, never with their values.
+  - `node src/weekly.ts --help` prints usage.
 
-  **Verification:**
-  - [x] Standard checks pass (one test: unknown `/api` route → 404 JSON; one test: `/` → 200 HTML)
-  - [x] Manual: `npm run dev`, then `curl -i localhost:8787/api/nope` and open `localhost:8787` in the browser
+  **Verification:** standard checks (`test/config.test.ts`, `test/log.test.ts`).
 
-  **Dependencies:** None
-
-  **Files likely touched:** `apps/web/package.json`, `apps/web/wrangler.jsonc`, `apps/web/tsconfig.json`, `apps/web/vitest.config.ts`, `apps/web/src/index.ts`, `apps/web/src/http.ts`, `apps/web/public/index.html`, `apps/web/test/index.test.ts`, `apps/web/.dev.vars.example`, root `.gitignore` (add `.dev.vars`)
-
-  **Estimated scope:** M (many files, but most are short config)
+  **Files:** `package.json`, `tsconfig.json`, `.env.example`, `src/config.ts`, `src/log.ts`, `src/weekly.ts`, tests
 
 ---
 
-- [x] **Task 2: D1 schema applied in tests and locally**
+- [ ] **Task 2: Schedule**
 
-  **Description:** Add `migrations/0001_init.sql` exactly as in the spec's data model (`items`, `print_runs`, the index and the `CHECK` constraints). Apply the migrations automatically before tests, and locally with `npm run db:migrate:local`.
+  **Description:** Pure functions for the most recent target time ≤ now, the ISO week of a date, the header's date range, and the footer's print date.
 
   **Acceptance criteria:**
-  - Tests see both tables with the spec's columns.
-  - The `CHECK` constraints reject `pinned = 2` and an unknown `print_runs.status`.
-  - `npm run db:migrate:local` applies cleanly to a fresh `.wrangler` state.
+  - Sunday 08:59 targets the previous Sunday; 09:00 targets the same day; Monday catches up to Sunday.
+  - ISO weeks are right across year ends: 2026-12-27 → 2026-W52, and 2027-01-03 → 2026-W53 (2026 starts on a Thursday, so it has 53 weeks).
+  - Both DST weekends keep 09:00 local.
 
-  **Verification:**
-  - [x] Standard checks pass (new `test/schema.test.ts`)
-  - [x] Manual: `rm -rf .wrangler && npm run db:migrate:local`
+  **Verification:** standard checks (`test/schedule.test.ts`).
 
-  **Dependencies:** Task 1
-
-  **Files likely touched:** `apps/web/migrations/0001_init.sql`, `apps/web/vitest.config.ts`, `apps/web/test/apply-migrations.ts` (or the setup the docs recommend), `apps/web/test/schema.test.ts`
-
-  **Estimated scope:** S
+  **Files:** `src/schedule.ts`, `test/schedule.test.ts`
 
 ---
 
-- [x] **Task 3: API: create and list items**
+- [ ] **Task 3: Dashboard API client**
 
-  **Description:** `POST /api/items` and `GET /api/items?status=active|archived`, with the spec's validation, item shape and ordering. This adds the router's `405` and `415` handling and the catch-all `500` that logs server-side and returns a generic message.
+  **Description:** `getActiveItems` and `recordRun` with the bearer token, a timeout, and clear errors (401, 503, network).
+
+  **Acceptance criteria:** items come back typed; a run posts the spec's body; failures carry a short reason with no token in it.
+
+  **Verification:** standard checks (`test/api.test.ts` against a local fake server).
+
+  **Files:** `src/api.ts`, `test/api.test.ts`, `test/fakes.ts`
+
+---
+
+- [ ] **Task 4: Grouping**
+
+  **Description:** `groupItems` calls Claude through `@anthropic-ai/sdk` (`claude-sonnet-5-5`, JSON-schema output, `fallbacks: "default"`), validates the answer, and otherwise uses the fallback grouping. Then it orders the groups (largest first) and the items (pinned first, then the API order).
 
   **Acceptance criteria:**
-  - Create validates `text` (trimmed, 1–500 chars, newlines kept), `category` (trimmed, empty → null, ≤ 40), `pinned` (boolean), rejects unknown fields, and returns `201 { item }` in the spec's camelCase shape.
-  - The list returns active items pinned first, then newest first. `status=archived` returns archived items, most recently archived first. Any other `status` → `400`.
-  - Non-JSON content type → `415`, wrong method → `405`, malformed JSON → `400`.
+  - A valid answer is used.
+  - Each of these falls back: unknown, missing or duplicate ids; an empty or too-long heading; bad JSON; a refusal; `max_tokens`; an HTTP error; no key.
+  - Item text is sent inside a delimited data block with `<` escaped.
+  - No item text appears in logs.
 
-  **Verification:**
-  - [x] Standard checks pass (`test/items.test.ts`, `test/validate.test.ts`, including text with `<b>`, quotes, emoji and newlines round-tripping exactly)
-  - [x] Manual: `curl` a create and a list against `npm run dev`
+  **Verification:** standard checks (`test/group.test.ts`, with a fake Anthropic server running the real SDK).
 
-  **Dependencies:** Task 2
-
-  **Files likely touched:** `apps/web/src/validate.ts`, `apps/web/src/db.ts`, `apps/web/src/items.ts`, `apps/web/src/index.ts`, `apps/web/test/items.test.ts`, `apps/web/test/validate.test.ts`
-
-  **Estimated scope:** M
+  **Files:** `package.json` (SDK), `src/group.ts`, `test/group.test.ts`, `test/fakes.ts`
 
 ---
 
-- [x] **Task 4: UI: add and list items**
+- [ ] **Task 5: The sheet's HTML**
 
-  **Description:** First, ask Mattan the open questions in `docs/UI.md` that affect this screen, and record the answers there. Then build the first real screen to `docs/UI.md`: the heading, the active list and the add field at the bottom (return saves; no Add button). The new item appears without a reload, and the field clears and keeps focus. On failure the text stays and an error shows. Item text is rendered with `textContent` only. Use `frontend-ui-engineering` + `frontend-design`.
+  **Description:** `renderSheet(groups, labels, fit)` gives the full HTML per `docs/PRINT_LAYOUT.md`: Letter, 0.75in margins, black and white, Charter, header, groups with rules, ★ for pinned, footer.
+
+  **Acceptance criteria:** text is escaped; group and item order are kept; the one-list fallback has no heading; the fit levels change spacing first, then size (never below 10pt).
+
+  **Verification:** standard checks (`test/render.test.ts`).
+
+  **Files:** `src/render.ts`, `test/render.test.ts`
+
+---
+
+- [ ] **Task 6: PDF and the dry run**
+
+  **Description:** `makePdf` runs the installed Chrome headless (a throwaway profile) to print the HTML to PDF, counts the pages, and tries the fit levels until it fits one page (or the fewest, up to two). `--dry-run` (and `--sample`) go from items to `out/weekly-<Sunday>.pdf`.
 
   **Acceptance criteria:**
-  - At a phone-size viewport, tap field → type → Enter adds the item, and it shows at the right place in the list.
-  - `<b>hi</b>` as item text shows literally.
-  - `public/app.js` is `// @ts-check` and passes `npm run typecheck`.
+  - A real-Chrome test gets one page for a normal list and two for a very long one (skipped if Chrome is missing).
+  - `npm run dry-run -- --sample` writes a PDF that looks right.
 
-  **Verification:**
-  - [x] Standard checks pass
-  - [x] Manual (`browser-testing-with-devtools`): Chrome at a phone viewport against `npm run dev`. Add an item; reload and it's still there; no console errors; empty state shows on a fresh database.
+  **Verification:** standard checks; dry run with `--sample` and against the local `wrangler dev`; inspect the PDF as an image.
 
-  **Dependencies:** Task 3
-
-  **Files likely touched:** `apps/web/public/index.html`, `apps/web/public/app.js`, `apps/web/public/style.css`, `apps/web/tsconfig.json`
-
-  **Estimated scope:** M
+  **Files:** `src/pdf.ts`, `src/run.ts`, `src/weekly.ts`, `test/pdf.test.ts`
 
 ---
 
-### Checkpoint A: after Tasks 1–4
-- [x] Standard checks pass
-- [x] Adding an item from a phone-size viewport works end to end (spec success criterion 3)
-- [x] Review with Mattan before continuing
+### Checkpoint A: after Tasks 1–6
+- [ ] Standard checks pass
+- [ ] A dry run makes a one-page PDF that matches `docs/PRINT_LAYOUT.md`
 
 ---
 
-- [x] **Task 5: API: edit, pin, archive and restore (`PATCH /api/items/:id`)**
+- [ ] **Task 7: Printer**
 
-  **Description:** Partial updates for `text`, `category`, `pinned` and `archived`, with the same validation as create. `archived: true` sets `archived_at` to now and `archived: false` clears it. Every change bumps `updated_at`.
+  **Description:** `isReachable` (`lpstat -p` enabled, plus a 3-second `dns-sd -L` lookup of the queue's Bonjour name, read from `lpstat -v`), `printPdf` (`lp -d … -o media=Letter`), then wait until the job leaves `lpstat -W not-completed`; if 5 minutes pass, `cancel` it and fail.
+
+  **Acceptance criteria:** each branch is tested with a fake command runner (enabled/disabled, Bonjour found or not, job completes, times out and is cancelled, `lp` error). Nothing is printed.
+
+  **Verification:** standard checks (`test/printer.test.ts`).
+
+  **Files:** `src/printer.ts`, `src/run.ts`, `test/printer.test.ts`
+
+---
+
+- [ ] **Task 8: Email and notification**
+
+  **Description:** `buildMessage` makes a MIME multipart message (text plus the PDF, base64). `sendEmail` runs `curl` against SMTPS, with the credentials on stdin and the message in a private temp file. `notify` shows a macOS notification, with its text passed as arguments rather than script.
 
   **Acceptance criteria:**
-  - Each field updates alone and in combination. Unknown id → `404`; empty body or unknown field → `400`.
-  - Archive moves the item from the active list to the archived list; restore moves it back.
-  - Pinning puts the item at the top of the active list.
+  - The message parses (headers, boundary, attachment).
+  - The real `curl` delivers it to a local fake SMTP server.
+  - A send failure is reported.
+  - `notify` builds the right `osascript` call.
 
-  **Verification:**
-  - [x] Standard checks pass (extended `test/items.test.ts`, `test/validate.test.ts`)
+  **Verification:** standard checks (`test/email.test.ts`, `test/notify.test.ts`).
 
-  **Dependencies:** Task 3
-
-  **Files likely touched:** `apps/web/src/validate.ts`, `apps/web/src/db.ts`, `apps/web/src/items.ts`, `apps/web/test/items.test.ts`, `apps/web/test/validate.test.ts`
-
-  **Estimated scope:** M
+  **Files:** `src/email.ts`, `src/notify.ts`, `test/email.test.ts`, `test/notify.test.ts`, `test/fakes.ts`
 
 ---
 
-- [x] **Task 6: UI: tap to edit, swipe to archive, undo**
+- [ ] **Task 9: State and the weekly flow**
 
-  **Description:** Per `docs/UI.md`: tap an item to edit it in place (text, pin, archive), and swipe left to archive. Archive removes the item and shows an undo toast for about 5 seconds; Undo restores it. Archive is also reachable from the edit view, for mouse and keyboard. Ask Mattan about any interaction detail `docs/UI.md` doesn't settle.
+  **Description:** `state.ts` handles the done markers per week and a lock that recovers if left stale. `job.ts` runs the spec's weekly flow over injected effects. `weekly.ts` wires up the real ones and sets exit codes.
 
-  **Acceptance criteria:**
-  - Edits, pin/unpin and archive persist across a page reload.
-  - Undo within the toast window brings the item back in its correct position.
-  - Editing is keyboard-usable (Escape cancels) and has visible focus.
+  **Acceptance criteria:** tests move the clock through every branch:
+  - already done; first run after the target; catch-up on Monday;
+  - unreachable within 24h (retry), then after 24h (email only);
+  - no items; Claude failing (fallback);
+  - email failing (notification, and `failed` recorded); recording the run failing (logged only);
+  - a lock that's held, or stale;
+  - `--force`.
 
-  **Verification:**
-  - [x] Standard checks pass
-  - [x] Manual at a phone viewport: edit text, pin, unpin, archive, undo, archive without undo, then reload and check each result.
+  **Verification:** standard checks (`test/state.test.ts`, `test/job.test.ts`).
 
-  **Dependencies:** Tasks 4, 5
-
-  **Files likely touched:** `apps/web/public/app.js`, `apps/web/public/style.css`, `apps/web/public/index.html`
-
-  **Estimated scope:** S
+  **Files:** `src/state.ts`, `src/job.ts`, `src/weekly.ts`, `test/state.test.ts`, `test/job.test.ts`
 
 ---
 
-- [x] **Task 7: Delete and the archived view**
-
-  **Description:** `DELETE /api/items/:id` (`204`, or `404` for an unknown id). In the UI, per `docs/UI.md`: tap the date to flip to the archive ("Archived"; add field hidden; empty: "Nothing archived yet."). On the phone, swipe left restores and swipe right deletes; on a laptop, tapping an archived item shows "Restore" and "Delete". Restoring and deleting show "Restored"/"Deleted" undo lines; a delete is only sent once its line goes away (or the page is left).
-
-  Before this task, revise Task 6 to Mattan's new model: on the phone, tapping only edits the text and swipe right pins or unpins; the Pin and Archive words appear only on a laptop.
-
-  **Acceptance criteria:**
-  - Delete removes the row from the database; a second delete returns `404`.
-  - Restore and delete work by swipe (touch) and by words (mouse), each with a working Undo; an undone delete never reaches the server.
-  - Flipping between today's page and the archive shows the right items, heading and add field.
-
-  **Verification:**
-  - [x] Standard checks pass (delete tests in `test/items.test.ts`, swipe/sort helpers in `test/lib.test.ts`)
-  - [x] Manual: touch at 390px and mouse at 1280px in headless Chrome: flip, restore, delete, undo each, reload.
-
-  **Dependencies:** Tasks 5, 6
-
-  **Files likely touched:** `apps/web/src/db.ts`, `apps/web/src/items.ts`, `apps/web/src/index.ts`, `apps/web/test/items.test.ts`, `apps/web/public/app.js`, `apps/web/public/swipe.js`, `apps/web/public/lib.js`, `apps/web/public/index.html`, `apps/web/public/style.css`
-
-  **Estimated scope:** L (split into the Task 6 revision, then the archive)
+### Checkpoint B: after Tasks 7–9
+- [ ] Standard checks pass
+- [ ] Every branch of the spec's weekly flow is covered by a test
 
 ---
 
-- **Task 8: dropped (2026-10-11).** Mattan chose no categories in the UI (`docs/UI.md`), so there's nothing to suggest. The API keeps its optional `category` field.
+- [ ] **Task 10: Docs and final check**
+
+  **Description:** Write `apps/printer/CLAUDE.md`, the root `CLAUDE.md` commands, the `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` updates, and `docs/STATUS.md` with Mattan's checklist. Then check the spec's success criteria from a clean clone.
+
+  **Acceptance criteria:** every success criterion in the spec holds; the checklist lists every input and action needed from Mattan.
+
+  **Verification:** a clean clone (`npm ci`, tests, typecheck, `npm run dry-run -- --sample`).
+
+  **Files:** `apps/printer/CLAUDE.md`, `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/STATUS.md`
 
 ---
 
-### Checkpoint B: after Tasks 5–7
-- [x] Standard checks pass
-- [x] Every UI story (spec user stories 1–6) works and persists across reload (spec success criteria 4–6)
-- [x] Review with Mattan before continuing
-
----
-
-- [x] **Task 9: Printer routes with bearer token**
-
-  **Description:** `GET /api/printer/items` (active items, same shape and order) and `POST /api/printer/runs` (`{ week, status, printedAt?, emailedAt? }`). Both require `Authorization: Bearer <PRINTER_TOKEN>`, compared in constant time. If no token is configured, they return `503`, never open access. The UI routes don't accept the token, and the printer routes don't serve anything without it.
-
-  **Acceptance criteria:**
-  - Missing or wrong token → `401`; token not configured → `503`; right token → `200`/`201`.
-  - `week` must match `YYYY-Www`, `status` must be one of `printed`, `emailed_only`, `failed`, and the timestamps must be ISO strings. Anything else → `400`.
-  - The archived items never appear in `GET /api/printer/items`.
-
-  **Verification:**
-  - [x] Standard checks pass (`test/printer.test.ts`)
-  - [x] Manual: the `curl` from spec success criterion 7, with and without the token from `.dev.vars`
-
-  **Dependencies:** Task 3
-
-  **Files likely touched:** `apps/web/src/printer.ts`, `apps/web/src/index.ts`, `apps/web/src/validate.ts`, `apps/web/src/db.ts`, `apps/web/test/printer.test.ts`
-
-  **Estimated scope:** M
-
----
-
-- [x] **Task 10: Home-screen app, accessibility and safe-text pass**
-
-  **Description:** Add `manifest.webmanifest` (name "Dashboard", `display: standalone`), an SVG icon and a PNG `apple-touch-icon` (rendered once with the installed headless Chrome), and the matching `<head>` tags. Then a pass over the whole UI: labels, real buttons, focus order, contrast on the dark theme, a check against `docs/UI.md`, and a final check that no user text ever goes through `innerHTML`.
-
-  **Acceptance criteria:**
-  - Chrome DevTools shows a valid manifest with an icon.
-  - Every control has an accessible name and is reachable by keyboard.
-  - `grep innerHTML public/` finds nothing that touches user data.
-
-  **Verification:**
-  - [x] Standard checks pass
-  - [x] Manual: DevTools Application → Manifest; keyboard-only run through add, edit, archive, undo; phone-viewport screenshot shown to Mattan for sign-off
-
-  **Dependencies:** Tasks 4–7
-
-  **Files likely touched:** `apps/web/public/manifest.webmanifest`, `apps/web/public/icon.svg`, `apps/web/public/apple-touch-icon.png`, `apps/web/public/index.html`, `apps/web/public/style.css`
-
-  **Estimated scope:** M
-
----
-
-- [x] **Task 11: Docs and final check against the spec**
-
-  **Description:** Write `apps/web/CLAUDE.md` (commands and gotchas) and add the commands to the root `CLAUDE.md`. Update `docs/ARCHITECTURE.md` (`wrangler.jsonc`, `print_runs.created_at`) and add the Phase 1 entries to `docs/DECISIONS.md` (no UI framework, no router library, Workers-runtime tests, `wrangler.jsonc`). Then walk through spec success criteria 1–9 from a clean state.
-
-  **Acceptance criteria:**
-  - From `rm -rf node_modules .wrangler`: `npm install && npm run db:migrate:local && npm run dev` gives a working app.
-  - Every spec success criterion is checked off, with any gap written down in `docs/STATUS.md`.
-  - The docs describe what was actually built.
-
-  **Verification:**
-  - [x] Standard checks pass
-  - [x] Manual: the clean-state run above, plus a final run through all UI stories at a phone viewport
-
-  **Dependencies:** Tasks 1–10
-
-  **Files likely touched:** `apps/web/CLAUDE.md`, `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/STATUS.md`
-
-  **Estimated scope:** M
-
----
-
-### Checkpoint C: Phase 1 complete
-- [x] Standard checks pass
-- [x] All spec success criteria met
-- [x] Review with Mattan before Phase 2 (`apps/printer`)
+### Checkpoint C: Phase 2 complete
+- [ ] All spec success criteria met
+- [ ] Checklist for Mattan is complete

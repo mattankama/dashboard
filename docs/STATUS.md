@@ -4,7 +4,7 @@ _Last updated: 2026-10-11_
 
 ## Phase
 
-**1: `apps/web` is built** and runs locally. All spec success criteria (`spec/SPEC-web.md`) were checked on 2026-10-11, including from a fresh clone. Nothing is deployed. Everything is committed and pushed to `github.com/mattankama/dashboard` (private, `main`).
+**2: `apps/printer`, in progress** (`/build auto`, started 2026-10-11, run without questions at Mattan's request). Spec: `spec/SPEC-printer.md`; tasks: `tasks/todo.md`. Phase 1 (`apps/web`) is built and checked.
 
 ## Done
 
@@ -19,11 +19,30 @@ _Last updated: 2026-10-11_
 
 ## Next task
 
-**Phase 2: `apps/printer` with `--dry-run`.** Start with `spec-driven-development` for `spec/SPEC-printer.md`, then planning. It fetches from `GET /api/printer/items` and reports to `POST /api/printer/runs` (token in `.env`). Decide the open questions below while specifying.
+Continue `tasks/todo.md` (Phase 2) with `/build auto`. After that: Phase 3 (launchd install), then Phase 4 (deploy, Cloudflare Access, first real weekly run).
 
-After that:
-- Phase 3: launchd install.
-- Phase 4: deploy, then Cloudflare Access (including the Access JWT check in the Worker), then the first real weekly run.
+## Checklist: inputs and actions needed from Mattan
+
+Collected during Phase 2 (Mattan asked for no questions until the end). Placeholders are used until these are done.
+
+**Decisions to confirm (assumptions made)**
+- [ ] Catch-up: the most recent missed Sunday prints at the next run at home; older missed weeks are skipped; a first install mid-week prints right away.
+- [ ] No active items: nothing is printed or emailed that week.
+- [ ] Unreachable printer: keep trying hourly, and after 24 hours email the PDF instead.
+- [ ] Grouping model `claude-sonnet-5-5` (from `CLAUDE.md`), with Anthropic's automatic refusal fallback (`fallbacks: "default"`) turned on.
+
+**Approve (added without asking)**
+- [ ] Runtime package `@anthropic-ai/sdk` in `apps/printer` (the Claude skill requires the official SDK; it's the job's only runtime package).
+- [ ] Dev packages `typescript`, `@types/node` in `apps/printer`.
+
+**Inputs**
+- [ ] `ANTHROPIC_API_KEY` (until then the sheet is one list, with no grouping).
+- [ ] Gmail: `GMAIL_USER`, an app password `GMAIL_APP_PASSWORD` (needs 2-Step Verification), and `NOTIFY_TO` (your own address).
+- [ ] Cloudflare account (Phase 4); then the real `DASHBOARD_API_URL` and `PRINTER_TOKEN`.
+
+**Actions**
+- [ ] Review the sheet's look in a dry-run PDF (`apps/printer/out/`).
+- [ ] OK the first real test print, and the first real email (to your address).
 
 ## Needed from Mattan before deploying
 
@@ -31,10 +50,9 @@ After that:
 - An Anthropic API key
 - A Gmail app password, plus the address to notify
 
-## Open questions (for Phase 2)
+## Open questions
 
-- Print day and time (default: Sunday 09:00).
-- Do items expire after N weeks, or does Mattan archive them by hand? (Phase 1 is archive-by-hand; expiry needs no schema change.)
+None open: print time is Sundays 09:00, and items don't expire (archived by hand). Both decided 2026-10-11.
 
 ## Notes for the next session
 
