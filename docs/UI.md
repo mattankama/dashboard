@@ -10,7 +10,7 @@ A calm, pleasant everyday planner, not a generic "vibe-coded" app. Simple, nothi
 - **One accent color: warm amber.** Shades of it are fine; no second hue. Use it sparingly: pins (★), focus, the caret and the send arrow. Everything else is warm neutrals.
 - **Paper-planner type:** serif for item text, small sans for labels and metadata. Generous line height.
 - **Add field at the bottom, always visible,** like a messaging app. There's no Add button: the keyboard's return key (or a small ↵ arrow) saves.
-- **Item actions:** swipe left to archive (with undo), tap to edit in place. Pinning lives in the edit view. Every swipe action must also be reachable without swiping (from the edit view) for mouse and keyboard users.
+- **Item actions:** on the phone, actions are swipes; on a laptop (no swiping), they're quiet words that appear on tap. Mattan accepted that phone actions aren't reachable with VoiceOver.
 - **No visible buttons that could live in a menu or gesture.** The list shows only the items.
 
 ## Decided from the options page (2026-10-11)
@@ -23,10 +23,10 @@ Options page: https://claude.ai/artifact/4XDzBZaW3WPE2JxbcbraZa
 - **Spacing:** one blank dot row between items, so every item has a finger-sized tap area.
 - **Placeholder:** "Worth remembering…". **Empty page:** "A clean page."
 - **Laptop:** a phone-width page centered in the window, with plain darker space (`#13100d`) around it.
-- **Editing:** tap an item to edit its text in place. The quiet words "Pin" (or "Unpin") and "Archive" appear under it. Return or tapping elsewhere saves; Esc cancels. No Save button.
-- **Swipe left to archive:** nothing is revealed. The item follows the finger and, past halfway, slides off the page.
-- **Undo line:** "Archived" with "Undo", just above the add field, for about 5 seconds.
-- **Archive view:** tap the date to flip to the archive (the heading becomes "Archived"); tap it again to come back. There, swipe left restores an item (it slides back to today's page), and tapping shows "Delete", which asks "Delete for good?" with "Delete" and "Keep".
+- **Editing:** tap an item to edit its text in place. Return or tapping elsewhere saves; Esc cancels. No Save button. On a laptop, the quiet words "Pin" (or "Unpin") and "Archive" appear under it.
+- **Swipes (phone, today's page):** left archives, right pins or unpins. Nothing is revealed; the item follows the finger and acts once it's past halfway.
+- **Undo lines:** "Archived", "Restored" or "Deleted" with "Undo", just above the add field, for about 5 seconds. A delete is only sent once its line goes away.
+- **Archive view:** tap the date to flip to the archive (the heading becomes "Archived"); tap it again to come back. The add field is hidden there. An empty archive says "Nothing archived yet." On the phone, swipe left restores and swipe right deletes, with no confirmation. On a laptop, tapping an archived item shows "Restore" and "Delete".
 
 ## Never
 Gradients, glassmorphism, glow, heavy shadows, card grids, emoji as icons, pill-badge clutter, purple/blue "AI" palettes, stock icon sets everywhere, bouncy animations, middle-dot meta strings ("A · B").

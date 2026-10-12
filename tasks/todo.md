@@ -141,22 +141,24 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 - [ ] **Task 7: Delete and the archived view**
 
-  **Description:** `DELETE /api/items/:id` (`204`, or `404` for an unknown id). In the UI, an "Active · Archived (n)" switch. The archived view lists archived items with Restore and Delete; Delete asks for confirmation inside the page, never with a browser `confirm()`.
+  **Description:** `DELETE /api/items/:id` (`204`, or `404` for an unknown id). In the UI, per `docs/UI.md`: tap the date to flip to the archive ("Archived"; add field hidden; empty: "Nothing archived yet."). On the phone, swipe left restores and swipe right deletes; on a laptop, tapping an archived item shows "Restore" and "Delete". Restoring and deleting show "Restored"/"Deleted" undo lines; a delete is only sent once its line goes away (or the page is left).
+
+  Before this task, revise Task 6 to Mattan's new model: on the phone, tapping only edits the text and swipe right pins or unpins; the Pin and Archive words appear only on a laptop.
 
   **Acceptance criteria:**
-  - Delete removes the row from the database. A second delete returns `404`.
-  - Restore moves an item back to the active view.
-  - The archived count is correct after archive, restore and delete.
+  - Delete removes the row from the database; a second delete returns `404`.
+  - Restore and delete work by swipe (touch) and by words (mouse), each with a working Undo; an undone delete never reaches the server.
+  - Flipping between today's page and the archive shows the right items, heading and add field.
 
   **Verification:**
-  - [ ] Standard checks pass (delete tests in `test/items.test.ts`)
-  - [ ] Manual at a phone viewport: switch views, restore, delete (confirm and cancel), reload.
+  - [ ] Standard checks pass (delete tests in `test/items.test.ts`, swipe/sort helpers in `test/lib.test.ts`)
+  - [ ] Manual: touch at 390px and mouse at 1280px in headless Chrome: flip, restore, delete, undo each, reload.
 
   **Dependencies:** Tasks 5, 6
 
-  **Files likely touched:** `apps/web/src/db.ts`, `apps/web/src/items.ts`, `apps/web/test/items.test.ts`, `apps/web/public/app.js`, `apps/web/public/index.html`
+  **Files likely touched:** `apps/web/src/db.ts`, `apps/web/src/items.ts`, `apps/web/src/index.ts`, `apps/web/test/items.test.ts`, `apps/web/public/app.js`, `apps/web/public/swipe.js`, `apps/web/public/lib.js`, `apps/web/public/index.html`, `apps/web/public/style.css`
 
-  **Estimated scope:** M
+  **Estimated scope:** L (split into the Task 6 revision, then the archive)
 
 ---
 

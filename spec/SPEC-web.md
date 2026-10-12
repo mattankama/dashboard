@@ -147,12 +147,12 @@ One screen, phone-first, also fine on a laptop. **Look and interaction follow `d
 ```
 
 - **Add:** a field at the bottom; return saves. The new item appears without a reload, and the field clears and keeps focus. On failure the text stays and an error shows.
-- **Each item:** text exactly as written (newlines kept). Tap to edit in place (text, pin, archive). Swipe left to archive.
-- **Archive:** the item leaves the list, and an undo toast shows for about 5 seconds.
-- **Archived view:** restore, or delete with an in-page confirmation (never a browser `confirm()`).
+- **Each item:** text exactly as written (newlines kept). Tap to edit the text in place. On the phone, swipe left to archive and right to pin; on a laptop, "Pin" and "Archive" words appear on tap.
+- **Archive:** the item leaves the list, and an undo line shows for about 5 seconds.
+- **Archived view:** tap the date to open it. On the phone, swipe left to restore and right to delete; on a laptop, tap for "Restore" and "Delete". Deleting doesn't ask first: an undo line shows, and the delete is only sent once it goes away.
 - **Empty state:** one quiet line.
 - **Basics:** inputs 16px+ (avoids iOS zoom), tap targets ≥ 44px, dark theme only.
-- **Accessible:** real `<button>`s and `<label>`s, keyboard usable, visible focus. Every swipe action is also reachable without swiping.
+- **Accessible:** real `<button>`s and `<label>`s, keyboard usable, visible focus. On a laptop every action is reachable by keyboard; on the phone, actions are swipes (Mattan accepted that VoiceOver can't reach them).
 - **Safe rendering:** item text goes on the page with `textContent`, never `innerHTML`.
 - **Home screen:** `manifest.webmanifest` with name "Dashboard", `display: standalone` and an icon.
 
