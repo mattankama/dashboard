@@ -80,10 +80,10 @@ function renderItem(item) {
   li.className = item.pinned ? "item pinned" : "item";
   li.dataset.id = item.id;
 
+  // The dash or star itself is drawn by CSS (.mark::after) so it can sit on its dot.
   const mark = document.createElement("span");
   mark.className = "mark";
   mark.setAttribute("aria-hidden", "true");
-  mark.textContent = item.pinned ? "★" : "–";
 
   // Item text is user data: textContent only, never innerHTML.
   const text = document.createElement("span");
