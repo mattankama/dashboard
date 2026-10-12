@@ -1,12 +1,13 @@
 // @ts-check
-import { compareItems, editPatch, formatDay, isoDay } from "./lib.js";
+import { compareArchived, compareItems, editPatch, formatDay, isoDay } from "./lib.js";
 import { enableSwipe } from "./swipe.js";
 
 /** @typedef {import("./lib.js").Item} Item */
 /** @typedef {{ text?: string, pinned?: boolean, archived?: boolean }} Patch */
+/** @typedef {"active" | "archived"} View */
 
 const UNDO_MS = 5000;
-// Desktop-style input: focus can safely move to the next thing without popping a phone keyboard.
+// A mouse or trackpad: no swiping, so actions are words; focus can move without popping a keyboard.
 const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
 
 /**
@@ -18,27 +19,39 @@ function byId(id) {
   return /** @type {T} */ (document.getElementById(id));
 }
 
+const page = /** @type {HTMLElement} */ (document.querySelector(".page"));
+const flip = /** @type {HTMLButtonElement} */ (byId("flip"));
+const flipLabel = byId("flip-label");
+const flipHint = byId("flip-hint");
 const today = /** @type {HTMLTimeElement} */ (byId("today"));
 const list = /** @type {HTMLUListElement} */ (byId("items"));
 const empty = byId("empty");
 const undoLine = byId("undo");
+const undoLabel = byId("undo-label");
 const undoButton = /** @type {HTMLButtonElement} */ (byId("undo-button"));
 const notice = byId("notice");
 const form = /** @type {HTMLFormElement} */ (byId("add"));
 const field = /** @type {HTMLTextAreaElement} */ (byId("new-item"));
 const save = /** @type {HTMLButtonElement} */ (byId("save"));
 
+/** Today's page or the archive. */
+/** @type {View} */
+let view = "active";
+/** The items on the page being shown. */
 /** @type {Item[]} */
 let items = [];
 let loaded = false;
 let saving = false;
-/** The item open for editing, and its unsaved text. */
+/** Today's page: the item open for editing, and its unsaved text. */
 /** @type {string | null} */
 let editingId = null;
 let draft = "";
-/** The last archived item, while its undo line shows. */
-/** @type {{ item: Item, request: Promise<boolean>, timer: number } | null} */
-let undo = null;
+/** The archive, with a mouse: the item showing Restore and Delete. */
+/** @type {string | null} */
+let selectedId = null;
+/** What the undo line is offering, while it shows. */
+/** @type {{ key: string, timer: number, undo: (refocus: boolean) => void, expire: () => void } | null} */
+let pendingUndo = null;
 /** True while the list is being rebuilt, so focus changes it causes are ignored. */
 let rendering = false;
 
@@ -70,6 +83,14 @@ function patchItem(id, patch) {
   });
 }
 
+/**
+ * keepalive lets the delete finish even if the page is closing.
+ * @param {string} id
+ */
+function deleteRequest(id) {
+  return api(`/api/items/${encodeURIComponent(id)}`, { method: "DELETE", keepalive: true });
+}
+
 /** @param {unknown} err */
 function describe(err) {
   if (err instanceof ApiError) return `${err.message.charAt(0).toUpperCase()}${err.message.slice(1)}.`;
@@ -98,10 +119,23 @@ function hideNotice() {
   notice.replaceChildren();
 }
 
+// ---- The heading ----
+
 function renderDate() {
   const now = new Date();
   today.textContent = formatDay(now, navigator.language);
   today.dateTime = isoDay(now);
+}
+
+/** The heading is today's date, or "Archived"; tapping it flips between the two. */
+function renderHeading() {
+  if (view === "active") {
+    flipLabel.replaceChildren(today);
+    flipHint.textContent = ", show archived items";
+  } else {
+    flipLabel.replaceChildren("Archived");
+    flipHint.textContent = ", back to today";
+  }
 }
 
 // ---- The list ----
@@ -118,11 +152,15 @@ function renderItem(item) {
   mark.setAttribute("aria-hidden", "true");
   li.append(mark);
 
-  if (item.id === editingId) {
+  if (view === "active" && item.id === editingId) {
     li.classList.add("editing");
     li.append(renderEditor(item));
   } else {
     li.append(renderOpenButton(item));
+    if (view === "archived" && item.id === selectedId) {
+      li.classList.add("selected");
+      li.append(words(["Restore", "restore"], ["Delete", "delete"]));
+    }
   }
   return li;
 }
@@ -156,29 +194,29 @@ function renderEditor(item) {
   area.rows = 1;
   area.value = draft;
   area.setAttribute("aria-label", "Edit item");
-
   editor.append(area);
+
   // On the phone these actions are swipes; with a mouse or trackpad they're words.
-  if (finePointer.matches) {
-    const words = document.createElement("div");
-    words.className = "edit-words";
-    words.append(word(item.pinned ? "Unpin" : "Pin", "pin"), word("Archive", "archive"));
-    editor.append(words);
-  }
+  if (finePointer.matches) editor.append(words([item.pinned ? "Unpin" : "Pin", "pin"], ["Archive", "archive"]));
   return editor;
 }
 
 /**
- * @param {string} label
- * @param {string} action
+ * A row of quiet word buttons.
+ * @param {...[string, string]} pairs  [label, action]
  */
-function word(label, action) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "word";
-  button.dataset.action = action;
-  button.textContent = label;
-  return button;
+function words(...pairs) {
+  const row = document.createElement("div");
+  row.className = "words";
+  for (const [label, action] of pairs) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "word";
+    button.dataset.action = action;
+    button.textContent = label;
+    row.append(button);
+  }
+  return row;
 }
 
 function editArea() {
@@ -220,9 +258,13 @@ function renderRow(id) {
   const li = list.querySelector(`[data-id="${CSS.escape(id)}"]`);
   const item = items.find((i) => i.id === id);
   if (!li || !item) return;
+  const hadFocus = li.contains(document.activeElement);
+  const fresh = renderItem(item);
   rendering = true;
-  li.replaceWith(renderItem(item));
+  li.replaceWith(fresh);
   rendering = false;
+  // Keep focus on the item, so keys like Esc still reach it.
+  if (hadFocus) /** @type {HTMLElement | null} */ (fresh.querySelector(".open"))?.focus();
 }
 
 /** @param {string} id */
@@ -230,12 +272,23 @@ function focusItem(id) {
   /** @type {HTMLElement | null} */ (list.querySelector(`[data-id="${CSS.escape(id)}"] .open`))?.focus();
 }
 
-/** @param {Item} item */
+/**
+ * Puts the latest copy of an item on the page, or takes it off if it now
+ * belongs to the other view (archived or not).
+ * @param {Item} item
+ */
 function putItem(item) {
-  items = [...items.filter((i) => i.id !== item.id), item].sort(compareItems);
+  const belongs = (item.archivedAt === null) === (view === "active");
+  items = items.filter((i) => i.id !== item.id);
+  if (belongs) items = [...items, item].sort(view === "active" ? compareItems : compareArchived);
 }
 
-// ---- Editing ----
+/** @param {string} id */
+function dropItem(id) {
+  items = items.filter((i) => i.id !== id);
+}
+
+// ---- Editing (today's page) ----
 
 /** @param {string} id */
 function openEditor(id) {
@@ -303,7 +356,7 @@ function commitEdit(extra = {}, refocus = false) {
     },
     (err) => {
       putItem(original);
-      if (editingId === null) {
+      if (editingId === null && view === "active") {
         editingId = original.id;
         draft = text;
       }
@@ -331,69 +384,176 @@ function togglePin(item) {
   );
 }
 
-// ---- Archiving and undo ----
+// ---- The archive, with a mouse ----
+
+/**
+ * Shows Restore and Delete under one archived item (or none).
+ * @param {string | null} id
+ * @param {boolean} [keyboard]  move focus to Restore
+ */
+function select(id, keyboard = false) {
+  const previous = selectedId;
+  selectedId = id;
+  if (previous !== null) renderRow(previous);
+  if (id === null) return;
+  renderRow(id);
+  if (keyboard) /** @type {HTMLElement | null} */ (list.querySelector(`[data-id="${CSS.escape(id)}"] .word`))?.focus();
+}
+
+// ---- Archive, restore, delete, and the undo line ----
+
+/**
+ * Shows the undo line. Whatever an earlier line was waiting on happens first.
+ * @param {string} label  "Archived", "Restored" or "Deleted"
+ * @param {string} key  the item it's about
+ * @param {(refocus: boolean) => void} undo
+ * @param {() => void} [expire]  runs when the line goes away without Undo
+ */
+function offerUndo(label, key, undo, expire = () => {}) {
+  settleUndo();
+  undoLabel.textContent = label;
+  pendingUndo = { key, undo, expire, timer: window.setTimeout(settleUndo, UNDO_MS) };
+  undoLine.hidden = false;
+}
+
+function takePending() {
+  const pending = pendingUndo;
+  if (pending) clearTimeout(pending.timer);
+  pendingUndo = null;
+  undoLine.hidden = true;
+  return pending;
+}
+
+/** The line goes away: anything waiting on it (a delete) happens now. */
+function settleUndo() {
+  takePending()?.expire();
+}
+
+/** @param {boolean} refocus */
+function useUndo(refocus) {
+  takePending()?.undo(refocus);
+}
+
+/**
+ * Hides the line for an item whose change failed anyway.
+ * @param {string} key
+ */
+function dropUndo(key) {
+  if (pendingUndo?.key === key) takePending();
+}
+
+// Give people time to reach Undo: pause the countdown while it's hovered or focused.
+function pauseUndo() {
+  if (pendingUndo) clearTimeout(pendingUndo.timer);
+}
+
+function resumeUndo() {
+  if (!pendingUndo) return;
+  clearTimeout(pendingUndo.timer);
+  pendingUndo.timer = window.setTimeout(settleUndo, UNDO_MS);
+}
+
+/**
+ * Moves an item between today's page and the archive. Sent at once; Undo moves it back.
+ * @param {Item} item
+ * @param {Patch} patch  { archived: true } or { archived: false }, maybe with a text change
+ * @param {string} label  for the undo line
+ * @param {string} failure  for the notice if the server refuses
+ */
+function move(item, patch, label, failure) {
+  dropItem(item.id);
+  render();
+  const request = patchItem(item.id, patch).then(
+    () => true,
+    (err) => {
+      dropUndo(item.id);
+      putItem(item);
+      render();
+      showNotice(`${failure} ${describe(err)}`);
+      return false;
+    },
+  );
+  offerUndo(label, item.id, async (refocus) => {
+    // Let the first change land, so the two requests can't arrive out of order.
+    if (!(await request)) return;
+    try {
+      const { item: moved } = await patchItem(item.id, { archived: !patch.archived });
+      putItem(moved);
+      render();
+      if (refocus) focusItem(moved.id);
+      hideNotice();
+    } catch (err) {
+      showNotice(`Couldn't undo. ${describe(err)}`);
+    }
+  });
+}
 
 /**
  * @param {Item} item
  * @param {Patch} [patch]  may also carry a text change made just before archiving
  */
 function archive(item, patch = { archived: true }) {
-  items = items.filter((i) => i.id !== item.id);
-  render();
+  move(item, patch, "Archived", "Couldn't archive that item.");
+}
 
-  const request = patchItem(item.id, patch).then(
-    () => true,
-    (err) => {
-      if (undo?.item.id === item.id) hideUndo();
-      putItem(item);
-      render();
-      showNotice(`Couldn't archive that item. ${describe(err)}`);
-      return false;
-    },
-  );
-  showUndo(item, request);
+/** @param {Item} item */
+function restore(item) {
+  move(item, { archived: false }, "Restored", "Couldn't restore that item.");
 }
 
 /**
+ * Deletes an archived item for good. Nothing is sent until the undo line goes away.
  * @param {Item} item
- * @param {Promise<boolean>} request  resolves to whether the archive saved
  */
-function showUndo(item, request) {
-  hideUndo();
-  undo = { item, request, timer: window.setTimeout(hideUndo, UNDO_MS) };
-  undoLine.hidden = false;
+function remove(item) {
+  dropItem(item.id);
+  render();
+  offerUndo(
+    "Deleted",
+    item.id,
+    (refocus) => {
+      putItem(item);
+      render();
+      if (refocus) focusItem(item.id);
+    },
+    () => {
+      deleteRequest(item.id).catch((err) => {
+        showNotice(`Couldn't delete that item. ${describe(err)}`);
+        if (view === "archived") loadItems();
+      });
+    },
+  );
 }
 
-function hideUndo() {
-  if (undo) clearTimeout(undo.timer);
-  undo = null;
-  undoLine.hidden = true;
+// ---- Views ----
+
+/** @param {View} next */
+function showView(next) {
+  if (editingId !== null) commitEdit();
+  selectedId = null;
+  settleUndo();
+  hideNotice();
+  view = next;
+  page.classList.toggle("archive", view === "archived");
+  empty.textContent = view === "active" ? "A clean page." : "Nothing archived yet.";
+  renderHeading();
+  items = [];
+  loaded = false;
+  render();
+  loadItems();
 }
 
-// Give people time to reach Undo: pause the countdown while it's hovered or focused.
-function pauseUndo() {
-  if (undo) clearTimeout(undo.timer);
-}
-
-function resumeUndo() {
-  if (undo) undo.timer = window.setTimeout(hideUndo, UNDO_MS);
-}
-
-/** @param {boolean} [refocus]  put keyboard focus on the restored item */
-async function undoArchive(refocus = false) {
-  if (!undo) return;
-  const { item, request } = undo;
-  hideUndo();
-  // Let the archive land first, so the two requests can't arrive out of order.
-  if (!(await request)) return;
+async function loadItems() {
+  const forView = view;
+  hideNotice();
   try {
-    const { item: restored } = await patchItem(item.id, { archived: false });
-    putItem(restored);
+    const body = await api(`/api/items?status=${forView}`);
+    if (view !== forView) return; // flipped again while this was loading
+    items = body.items;
+    loaded = true;
     render();
-    if (refocus) focusItem(restored.id);
-    hideNotice();
   } catch (err) {
-    showNotice(`Couldn't undo. ${describe(err)}`);
+    if (view === forView) showNotice(`Couldn't load your items. ${describe(err)}`, loadItems);
   }
 }
 
@@ -403,18 +563,6 @@ async function undoArchive(refocus = false) {
 function syncField() {
   save.disabled = saving || field.value.trim() === "";
   sizeToContent(field);
-}
-
-async function loadItems() {
-  hideNotice();
-  try {
-    const body = await api("/api/items");
-    items = body.items;
-    loaded = true;
-    render();
-  } catch (err) {
-    showNotice(`Couldn't load your items. ${describe(err)}`, loadItems);
-  }
 }
 
 form.addEventListener("submit", async (event) => {
@@ -456,60 +604,6 @@ field.addEventListener("input", syncField);
 
 // ---- List events ----
 
-list.addEventListener("click", (event) => {
-  const target = /** @type {Element} */ (event.target);
-  const id = /** @type {HTMLElement | null} */ (target.closest(".item"))?.dataset.id;
-  if (!id) return;
-
-  const action = /** @type {HTMLElement | null} */ (target.closest(".word"))?.dataset.action;
-  if (action === "pin") {
-    const item = items.find((i) => i.id === id);
-    // detail is 0 when a key, not a pointer, pressed the button.
-    if (item) commitEdit({ pinned: !item.pinned }, event.detail === 0);
-  } else if (action === "archive") {
-    commitEdit({ archived: true });
-    if (event.detail === 0) undoButton.focus();
-  } else if (target.closest(".open")) {
-    openEditor(id);
-  }
-});
-
-// Keep the text focused while pressing Pin or Archive (iPhone buttons don't take focus).
-list.addEventListener("pointerdown", (event) => {
-  if (/** @type {Element} */ (event.target).closest(".word")) event.preventDefault();
-});
-
-list.addEventListener("input", (event) => {
-  const area = /** @type {HTMLTextAreaElement} */ (event.target);
-  if (!area.classList.contains("edit-text")) return;
-  draft = area.value;
-  sizeToContent(area);
-});
-
-list.addEventListener("keydown", (event) => {
-  if (!(/** @type {Element} */ (event.target).classList.contains("edit-text"))) return;
-  if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
-    event.preventDefault();
-    commitEdit({}, finePointer.matches);
-  } else if (event.key === "Escape") {
-    event.preventDefault();
-    cancelEdit();
-  }
-});
-
-// Leaving the item (tapping elsewhere, tabbing away) saves it.
-list.addEventListener("focusout", (event) => {
-  if (rendering || editingId === null) return;
-  const li = /** @type {Element} */ (event.target).closest(".editing");
-  const next = /** @type {Node | null} */ (event.relatedTarget);
-  if (li && !(next && li.contains(next))) commitEdit();
-});
-
-// On iPhone, tapping a blank spot doesn't blur the text field, so do it here.
-document.addEventListener("pointerdown", (event) => {
-  if (editingId !== null && !(/** @type {Element} */ (event.target).closest(".editing"))) editArea()?.blur();
-});
-
 /**
  * @param {(item: Item) => void} act
  * @returns {(id: string) => void}
@@ -521,22 +615,100 @@ function onItem(act) {
   };
 }
 
-enableSwipe(list, (direction) =>
-  direction === "left" ? { leaves: true, run: onItem(archive) } : { leaves: false, run: onItem(togglePin) },
-);
+list.addEventListener("click", (event) => {
+  const target = /** @type {Element} */ (event.target);
+  const id = /** @type {HTMLElement | null} */ (target.closest(".item"))?.dataset.id;
+  const item = items.find((i) => i.id === id);
+  if (!item) return;
+  // detail is 0 when a key, not a pointer, pressed the button.
+  const keyboard = event.detail === 0;
+  const action = /** @type {HTMLElement | null} */ (target.closest(".word"))?.dataset.action;
 
-undoButton.addEventListener("click", (event) => undoArchive(event.detail === 0));
+  if (action === "pin") {
+    commitEdit({ pinned: !item.pinned }, keyboard);
+  } else if (action === "archive" || action === "restore" || action === "delete") {
+    if (action === "archive") commitEdit({ archived: true });
+    else {
+      selectedId = null;
+      (action === "restore" ? restore : remove)(item);
+    }
+    if (keyboard) undoButton.focus();
+  } else if (target.closest(".open")) {
+    if (view === "active") openEditor(item.id);
+    // In the archive the phone uses swipes; with a mouse, a tap shows Restore and Delete.
+    else if (finePointer.matches) select(selectedId === item.id ? null : item.id, keyboard);
+  }
+});
+
+// Keep the text focused while pressing Pin or Archive (iPhone buttons don't take focus).
+list.addEventListener("pointerdown", (event) => {
+  if (/** @type {Element} */ (event.target).closest(".editing .word")) event.preventDefault();
+});
+
+list.addEventListener("input", (event) => {
+  const area = /** @type {HTMLTextAreaElement} */ (event.target);
+  if (!area.classList.contains("edit-text")) return;
+  draft = area.value;
+  sizeToContent(area);
+});
+
+list.addEventListener("keydown", (event) => {
+  const target = /** @type {Element} */ (event.target);
+  if (target.classList.contains("edit-text")) {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      commitEdit({}, finePointer.matches);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      cancelEdit();
+    }
+  } else if (event.key === "Escape" && selectedId !== null) {
+    const id = selectedId;
+    select(null);
+    focusItem(id);
+  }
+});
+
+// Leaving the item (tapping elsewhere, tabbing away) saves it.
+list.addEventListener("focusout", (event) => {
+  if (rendering || editingId === null) return;
+  const li = /** @type {Element} */ (event.target).closest(".editing");
+  const next = /** @type {Node | null} */ (event.relatedTarget);
+  if (li && !(next && li.contains(next))) commitEdit();
+});
+
+document.addEventListener("pointerdown", (event) => {
+  const target = /** @type {Element} */ (event.target);
+  // On iPhone, tapping a blank spot doesn't blur the text field, so do it here.
+  if (editingId !== null && !target.closest(".editing")) editArea()?.blur();
+  if (selectedId !== null && !target.closest(".selected")) select(null);
+});
+
+enableSwipe(list, (direction) => {
+  if (view === "active") {
+    return direction === "left" ? { leaves: true, run: onItem(archive) } : { leaves: false, run: onItem(togglePin) };
+  }
+  return direction === "left" ? { leaves: true, run: onItem(restore) } : { leaves: true, run: onItem(remove) };
+});
+
+flip.addEventListener("click", () => showView(view === "active" ? "archived" : "active"));
+
+undoButton.addEventListener("click", (event) => useUndo(event.detail === 0));
 undoLine.addEventListener("pointerenter", pauseUndo);
 undoLine.addEventListener("pointerleave", resumeUndo);
 undoLine.addEventListener("focusin", pauseUndo);
 undoLine.addEventListener("focusout", resumeUndo);
 
-// Keep the date right when the app comes back after midnight.
+// Keep the date right when the app comes back after midnight. When the page is
+// hidden or closed, anything waiting on the undo line (a delete) is sent now.
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") renderDate();
+  else settleUndo();
 });
+window.addEventListener("pagehide", settleUndo);
 
 renderDate();
+renderHeading();
 syncField();
 // Phones only show the keyboard after a tap, so focus on load only with a mouse.
 if (finePointer.matches) field.focus();

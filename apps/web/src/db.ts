@@ -94,3 +94,9 @@ export async function updateItem(db: D1Database, id: string, patch: ItemPatch): 
     .first<ItemRow>();
   return row === null ? null : toItem(row);
 }
+
+/** Deletes an item for good. Returns false if there was no such item. */
+export async function deleteItem(db: D1Database, id: string): Promise<boolean> {
+  const { meta } = await db.prepare("DELETE FROM items WHERE id = ?").bind(id).run();
+  return meta.changes > 0;
+}

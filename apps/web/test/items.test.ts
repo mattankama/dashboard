@@ -243,6 +243,33 @@ describe("PATCH /api/items/:id", () => {
     const res = await exports.default.fetch("http://localhost/api/items/abc", { method: "PUT" });
 
     expect(res.status).toBe(405);
-    expect(res.headers.get("Allow")).toBe("PATCH");
+    expect(res.headers.get("Allow")).toBe("PATCH, DELETE");
+  });
+});
+
+function remove(id: string) {
+  return exports.default.fetch(`http://localhost/api/items/${id}`, { method: "DELETE" });
+}
+
+describe("DELETE /api/items/:id", () => {
+  it("deletes the item for good", async () => {
+    const item = await create({ text: "gone" });
+
+    const res = await remove(item.id);
+
+    expect(res.status).toBe(204);
+    expect(await res.text()).toBe("");
+    const row = await env.DB.prepare("SELECT id FROM items WHERE id = ?").bind(item.id).first();
+    expect(row).toBeNull();
+  });
+
+  it("returns 404 for an unknown id, including a second delete", async () => {
+    const item = await create({ text: "gone" });
+    await remove(item.id);
+
+    const res = await remove(item.id);
+
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: "Item not found" });
   });
 });

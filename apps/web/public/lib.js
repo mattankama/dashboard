@@ -17,6 +17,15 @@ export function compareItems(a, b) {
 }
 
 /**
+ * Same order as the API's archived list: most recently archived first.
+ * @param {Item} a
+ * @param {Item} b
+ */
+export function compareArchived(a, b) {
+  return (b.archivedAt ?? "").localeCompare(a.archivedAt ?? "");
+}
+
+/**
  * The page heading, like the top of a planner page: "Sunday, October 11".
  * @param {Date} date
  * @param {string} [locale]

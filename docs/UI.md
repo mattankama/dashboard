@@ -32,5 +32,4 @@ Options page: https://claude.ai/artifact/4XDzBZaW3WPE2JxbcbraZa
 Gradients, glassmorphism, glow, heavy shadows, card grids, emoji as icons, pill-badge clutter, purple/blue "AI" palettes, stock icon sets everywhere, bouncy animations, middle-dot meta strings ("A · B").
 
 ## Still to ask Mattan
-1. What an empty archive says (Task 7).
-2. The home-screen icon (Task 10).
+1. The home-screen icon (Task 10).

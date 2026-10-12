@@ -14,7 +14,11 @@
   <body>
     <div class="page">
       <header class="head">
-        <h1><time id="today"></time></h1>
+        <h1>
+          <button id="flip" class="flip" type="button">
+            <span id="flip-label"><time id="today"></time></span><span id="flip-hint" class="visually-hidden"></span>
+          </button>
+        </h1>
       </header>
 
       <main class="sheet">
@@ -25,7 +29,7 @@
       <footer class="bar">
         <div role="status">
           <div id="undo" class="undo" hidden>
-            <span>Archived</span>
+            <span id="undo-label">Archived</span>
             <button id="undo-button" class="word" type="button">Undo</button>
           </div>
         </div>

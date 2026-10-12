@@ -61,6 +61,25 @@ h1 {
   line-height: var(--row);
 }
 
+/* The date is a button: tapping it flips to the archive and back. */
+.flip {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The archive is for looking back: no add field there. */
+.archive .add { display: none; }
+.archive .bar { border-top-color: transparent; }
+
 /* The dot grid. Dots sit at each cell's centre column, on the text baseline. */
 .sheet {
   flex: 1;
@@ -125,7 +144,10 @@ h1 {
 /* The caret and the words underneath show which item is being edited. */
 .edit-text:focus { outline: none; }
 
-.edit-words {
+/* Restore and Delete sit under an archived item's text. */
+.item > .words { grid-column: 2; }
+
+.words {
   display: flex;
   gap: 2rem;
   font-family: var(--sans);
@@ -286,6 +308,7 @@ h1 {
 }
 
 .save:focus-visible,
+.flip:focus-visible,
 .open:focus-visible,
 .word:focus-visible {
   outline: 2px solid var(--honey);

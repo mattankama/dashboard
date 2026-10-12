@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareItems, editPatch, formatDay, isoDay, swipeOutcome } from "../public/lib.js";
+import { compareArchived, compareItems, editPatch, formatDay, isoDay, swipeOutcome } from "../public/lib.js";
 
 function item(id: string, pinned: boolean, createdAt: string) {
   return { id, text: id, category: null, pinned, createdAt, updatedAt: createdAt, archivedAt: null };
@@ -73,5 +73,14 @@ describe("swipeOutcome", () => {
   it("springs back before halfway either way", () => {
     expect(swipeOutcome(-199, 400)).toBe("back");
     expect(swipeOutcome(199, 400)).toBe("back");
+  });
+});
+
+describe("compareArchived (same order as the API's archived list)", () => {
+  it("puts the most recently archived first", () => {
+    const earlier = { ...item("earlier", false, "2026-10-01T00:00:00.000Z"), archivedAt: "2026-10-05T00:00:00.000Z" };
+    const later = { ...item("later", true, "2026-10-02T00:00:00.000Z"), archivedAt: "2026-10-09T00:00:00.000Z" };
+
+    expect([earlier, later].sort(compareArchived).map((i) => i.id)).toEqual(["later", "earlier"]);
   });
 });

@@ -139,7 +139,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 7: Delete and the archived view**
+- [x] **Task 7: Delete and the archived view**
 
   **Description:** `DELETE /api/items/:id` (`204`, or `404` for an unknown id). In the UI, per `docs/UI.md`: tap the date to flip to the archive ("Archived"; add field hidden; empty: "Nothing archived yet."). On the phone, swipe left restores and swipe right deletes; on a laptop, tapping an archived item shows "Restore" and "Delete". Restoring and deleting show "Restored"/"Deleted" undo lines; a delete is only sent once its line goes away (or the page is left).
 

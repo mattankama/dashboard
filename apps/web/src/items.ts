@@ -1,4 +1,4 @@
-import { insertItem, listItems, updateItem } from "./db";
+import { deleteItem, insertItem, listItems, updateItem } from "./db";
 import { error, json, readJson } from "./http";
 import { validateNewItem, validatePatch, validateStatus } from "./validate";
 
@@ -34,4 +34,13 @@ export async function patchItem(
   const item = await updateItem(env.DB, params.id ?? "", patch.value);
   if (item === null) return error(404, "Item not found");
   return json({ item });
+}
+
+export async function removeItem(
+  _request: Request,
+  env: Env,
+  params: Record<string, string | undefined>,
+): Promise<Response> {
+  if (!(await deleteItem(env.DB, params.id ?? ""))) return error(404, "Item not found");
+  return new Response(null, { status: 204 });
 }
