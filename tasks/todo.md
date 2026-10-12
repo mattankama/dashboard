@@ -7,7 +7,7 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [ ] **Task 1: Scaffold, config, log, CLI flags**
+- [x] **Task 1: Scaffold, config, log, CLI flags**
 
   **Description:** `apps/printer` as a standalone ESM package that Node 24 runs as TypeScript directly. `config.ts` loads `.env` (`process.loadEnvFile`), applies defaults, and reports what's missing for a real run. `log.ts` appends timestamped lines to the log file. `weekly.ts` parses `--dry-run`, `--force`, `--sample`, `--help`.
 
