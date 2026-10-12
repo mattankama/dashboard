@@ -21,8 +21,9 @@ Dashboard is **not** a to-do list or a calendar. Mattan already has both. It hol
 | `docs/UI.md` | UI design decisions. Mattan owns UI design: ask before any visual choice not settled there. |
 | `docs/DECISIONS.md` | Why each choice was made. Add an entry when a choice changes. |
 | `docs/STATUS.md` | Current phase, next task, open questions. Update it every session. |
+| `docs/SETUP.md` | Mattan's step-by-step setup guide: Gmail, API key, Cloudflare deploy, Access, install. |
 | `apps/web/` | Cloudflare Worker + D1 + phone UI (Phase 1, built). Its own `CLAUDE.md` has commands and gotchas. |
-| `apps/printer/` | Mac weekly job: fetch → group → PDF → print → email (Phase 2, built; launchd is Phase 3). Its own `CLAUDE.md` has commands and gotchas. |
+| `apps/printer/` | Mac weekly job: fetch → group → PDF → print → email, plus its launchd installer. Its own `CLAUDE.md` has commands and gotchas. |
 | `.agents/skills/` | Engineering workflow skills (linked into `.claude/skills/`; the source is `skills-lock.json`). Don't edit them. If they go missing, restore them with `npx skills experimental_install`. |
 | `.claude/commands/build.md` | `/build`, copied from upstream agent-skills (only the `agent-skills:` prefix removed from skill names). Don't edit it. |
 | `spec/` | Approved specs, one per module: `SPEC-<module>.md` (e.g. `SPEC-web.md`) |
@@ -47,6 +48,8 @@ npm run dev                      # http://localhost:8787
 npm test
 npm run typecheck
 npm run build                    # bundle only (wrangler deploy --dry-run), no account
+npm run deploy                   # deploys (Mattan's account; ask first)
+npm run db:migrate:remote        # migrations on the deployed D1 (ask first)
 ```
 
 **`apps/printer`** (run inside `apps/printer/`; details in `apps/printer/CLAUDE.md`):
@@ -58,7 +61,9 @@ npm run dry-run                 # out/weekly-<Sunday>.pdf, no printing or email
 npm run dry-run -- --sample     # the same with built-in example items
 npm test
 npm run typecheck
+npm run status                  # health check: settings, printer, web app, last run (only looks)
 npm run weekly                  # the real run: prints and emails when due (ask Mattan first)
+./install.sh --dry-run          # render and check the launchd job; ./install.sh loads it (ask first)
 ```
 
 ## Product rule: the in-app AI only groups

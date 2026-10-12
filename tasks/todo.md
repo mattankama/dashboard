@@ -23,7 +23,7 @@ Never load launchd, deploy, print or email in these tasks.
   - `CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET` (both or neither) are sent on printer API requests. Tested; added to `.env.example`.
 - [x] **Task 5: Deploy scripts**
   - `npm run deploy`, `npm run db:migrate:remote`, and `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` `vars` placeholders. `npm run build` still bundles.
-- [ ] **Task 6: Setup guide and docs**
+- [x] **Task 6: Setup guide and docs**
   - `docs/SETUP.md` gives Mattan's steps in order.
   - Update the app `CLAUDE.md` files, `ARCHITECTURE.md` (including the `pmset` fix), `DECISIONS.md` and `STATUS.md`.
   - Final clean-clone check for both apps.

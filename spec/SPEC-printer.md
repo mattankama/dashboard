@@ -192,7 +192,7 @@ launchd (Phase 3), `pmset` wake, deploying the Worker (Phase 4), item expiry (de
 
 ## Phase 3: running every hour (launchd)
 
-_Added 2026-10-12 ("continue with the plan"). Loading the job on the Mac stays Mattan's step: `CLAUDE.md` says to ask first._
+_Added and built 2026-10-12 ("continue with the plan"). Loading the job on the Mac stays Mattan's step: `CLAUDE.md` says to ask first._
 
 **Objective:** the weekly job runs by itself every hour, survives reboots and sleep, and is easy to install, check and remove.
 

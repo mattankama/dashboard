@@ -11,7 +11,10 @@ npm run dry-run                 # out/weekly-<Sunday>.pdf from the API in .env
 npm run dry-run -- --sample     # same, with built-in example items (no API needed)
 npm test                        # node --test; TZ pinned to America/Los_Angeles
 npm run typecheck               # tsc --noEmit (also `npm run build`; there's no build step)
-npm run weekly                  # the real run: prints and emails when due (Phase 3 schedules it)
+npm run status                  # health check; only looks
+npm run weekly                  # the real run: prints and emails when due (launchd runs this hourly)
+./install.sh --dry-run          # render and lint the launchd job without installing
+./install.sh                    # load it into launchd (Mattan's step) · ./uninstall.sh removes it
 ```
 
 **A real print or a real email needs Mattan's OK first** (`CLAUDE.md`). `npm run weekly` does both when the week is due, and `--force` makes it do them even when the week is done.
@@ -24,6 +27,7 @@ npm run weekly                  # the real run: prints and emails when due (Phas
 - `src/render.ts` → `src/pdf.ts`: HTML for the sheet, then Chrome to PDF, fitted to a page.
 - `src/printer.ts`, `src/email.ts`, `src/notify.ts`: `lp`/`lpstat`/`cancel`/`dns-sd`, `curl` SMTPS, `osascript`.
 - `src/state.ts`: `~/Library/Application Support/dashboard/` (done markers, alerts, sheets, lock, `last-run`). The log is `~/Library/Logs/dashboard.log`.
+- `src/status.ts`: `--status`. `src/launchd.ts`: the job file `install.sh` renders.
 
 ## Gotchas
 
@@ -33,3 +37,5 @@ npm run weekly                  # the real run: prints and emails when due (Phas
 - **`dns-sd` never exits.** It gets 3 seconds, then its output is read. So `printerStatus` takes about 3 seconds.
 - **Claude only groups** (`CLAUDE.md`). Its answer is used only if every id appears exactly once with short headings; otherwise the fallback. Item text never goes in logs or email bodies.
 - **Fit levels were measured** with Charter on this Mac: about 26 one-line items fit a page at the roomiest level, and about 40 at 10pt (`test/pdf.test.ts`).
+- **Under launchd** there's no terminal, so log lines only go to the log file; `~/Library/Logs/dashboard.launchd.log` only catches crashes. After a Node upgrade, re-run `install.sh` (the job holds Node's full path).
+- **Behind Access**, the job sends `CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET` when set (both or neither).

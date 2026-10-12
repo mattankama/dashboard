@@ -14,7 +14,7 @@ npm run typecheck                # Worker + tests (tsconfig.json), then UI JS (t
 npm run build                    # wrangler deploy --dry-run: bundles only, no account, no upload
 ```
 
-Deploying and remote D1 are Phase 4 and need Mattan's OK.
+Deploying needs Mattan's OK and account: `npm run deploy` (the first one creates the D1 database and writes its id into `wrangler.jsonc`) and `npm run db:migrate:remote`. The steps are in `docs/SETUP.md`.
 
 ## Layout
 
@@ -28,6 +28,7 @@ Deploying and remote D1 are Phase 4 and need Mattan's OK.
 - **Tests share storage.** `@cloudflare/vitest-plugin` doesn't isolate storage per test, so `test/setup.ts` applies the migrations and clears the tables before every test.
 - **`exports.default.fetch` in tests skips asset routing**, so the Worker passes non-API paths to `env.ASSETS` itself. Its type comes from `Cloudflare.GlobalProps.mainModule` in `src/env.d.ts`.
 - **Printer routes fail closed:** no `PRINTER_TOKEN` gives `503`, a wrong one `401`. Tests set the token in `vitest.config.ts`.
+- **The Access JWT check** (`src/access.ts`) skips `localhost`, so local dev and most tests don't see it. Off `localhost`, empty `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` give `503`. Tests fake the team's certs through `checkAccess`'s `fetchCerts` option; the certs are cached per team, which the router test relies on.
 - **Phone vs laptop** is decided by `(hover: hover) and (pointer: fine)`. Phone actions are swipes; laptop actions are words on tap.
 - **A delete is sent only when its undo line goes away**, or the view flips, or the page hides (`keepalive`).
 - **npm 12 blocks install scripts** (workerd, esbuild). Their binaries still work; look here first if `wrangler dev` won't start.

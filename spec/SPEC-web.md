@@ -270,7 +270,7 @@ Deploying, Cloudflare Access and the Access JWT check, custom domain, offline ca
 
 ## Phase 4 (prepared without an account): going online
 
-_Added 2026-10-12. Deploying, changing Cloudflare settings and creating secrets are Mattan's steps (`CLAUDE.md`); this part builds and documents everything that doesn't need the account._
+_Added and built 2026-10-12. Deploying, changing Cloudflare settings and creating secrets are Mattan's steps (`CLAUDE.md`, `docs/SETUP.md`); this part builds and documents everything that doesn't need the account._
 
 **Objective:** the app works from Mattan's phone anywhere, only Mattan can use it, and the Mac job can still reach its routes.
 

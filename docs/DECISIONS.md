@@ -43,3 +43,12 @@ The Claude API skill requires the official SDK in a TypeScript project, rather t
 
 ### 2026-10-11: When the weekly sheet happens (Phase 2 assumptions)
 The job always handles the most recent Sunday 09:00 that has passed, so a Mac away on Sunday prints the sheet on its next run at home; older missed weeks are skipped. An unreachable printer is retried hourly, and after 24 hours the PDF is emailed instead. A week with no active items sends nothing. Lasting problems (missing settings, the API, Chrome) alert once a week, not every hour. All of these are on Mattan's checklist to confirm.
+
+### 2026-10-12: launchd runs the job hourly and at login; installing marks the week done
+`RunAtLoad` plus `StartInterval` 3600 covers sleep, travel and reboots without a separate catch-up mechanism. `install.sh` writes Node's full path into the job (launchd doesn't load nvm) and marks the current week done first, so installing never prints by surprise. Loading it stays Mattan's step.
+
+### 2026-10-12: The Worker checks Access's JWT itself, with WebCrypto, and fails closed
+Cloudflare Access protects the app at the edge; the Worker also verifies Access's signed token on the item API, in case a route ever ends up outside Access. WebCrypto does the RS256 check in about 60 lines, so `jose` isn't needed. Off `localhost`, missing Access settings mean `503`, never open.
+
+### 2026-10-12: Access on the free workers.dev address, with a service token for the Mac
+No custom domain is needed: Access can protect a Worker's `workers.dev` address directly. The Mac job gets through with an Access service token (two headers), plus the printer's own bearer token.

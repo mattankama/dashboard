@@ -19,10 +19,10 @@ Adding items has to work from anywhere, even when the Mac is asleep, so storage 
 ```
 apps/web/       Cloudflare Worker: API + static UI (public/), D1 migrations, wrangler.jsonc
 apps/printer/   Mac weekly job: fetch, group, render, print, email (src/*.ts, run directly by Node 24)
-  launchd/      org.dashboard.weekly.plist             (Phase 3, not built yet)
-  install.sh    copies the plist to ~/Library/LaunchAgents and loads it (Phase 3)
+  install.sh    renders the launchd job (src/launchd.ts) into ~/Library/LaunchAgents and loads it
+  uninstall.sh  unloads and removes it
 spec/           one approved spec per module
-docs/
+docs/           including SETUP.md, Mattan's setup guide
 ```
 
 ## Data model (D1)
@@ -52,7 +52,7 @@ docs/
 
 ## API (Worker)
 
-UI routes sit behind Cloudflare Access:
+UI routes sit behind Cloudflare Access. As a second layer, the Worker checks Access's signed JWT (`Cf-Access-Jwt-Assertion`) on every `/api/*` route except the printer's. It must be RS256 from the team's keys, with `iss` the team and `aud` the app's `ACCESS_AUD`, and not expired; anything else gets `403`. `localhost` skips the check; deployed without `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD`, the API answers `503`.
 
 - `GET /api/items?status=active|archived`
 - `POST /api/items` with `{ text, category?, pinned? }`
@@ -61,7 +61,7 @@ UI routes sit behind Cloudflare Access:
 
 Active items list pinned first, then newest; archived items most recently archived first. Input is validated (text 1–500 characters, trimmed only; unknown fields rejected), and mutating requests must be `application/json`.
 
-Printer routes use a bearer token (`PRINTER_TOKEN`), with an Access service-token bypass for this path only:
+Printer routes use a bearer token (`PRINTER_TOKEN`). Behind Access, the Mac also sends a Cloudflare Access service token (`CF-Access-Client-Id`/`CF-Access-Client-Secret`), allowed by a Service Auth policy:
 
 - `GET /api/printer/items`: active items only
 - `POST /api/printer/runs`: records a print run (`{ week, status, printedAt?, emailedAt? }`)
@@ -127,8 +127,10 @@ State lives in `~/Library/Application Support/dashboard/` (week markers, alerts,
 
 ### Mac reliability
 
-- launchd `StartInterval` 3600 runs the job hourly. A sleeping or away laptop catches up when it's next home.
-- Optional: `sudo pmset repeat wakeorpoweron Su 08:55:00` wakes the Mac before the target time when it's plugged in.
+- The launchd user agent `org.dashboard.weekly` runs the job every hour (`StartInterval` 3600) and at load/login (`RunAtLoad`), using Node's full path (launchd doesn't load nvm). A sleeping or away laptop catches up when it's next home.
+- `install.sh` marks the current week done first, so installing never prints by surprise (unless `--print-this-week`).
+- `npm run status` shows the next print, this week's state, the last run, settings, printer and web app.
+- Optional: `sudo pmset repeat wakeorpoweron U 08:55:00` wakes the Mac before the target time when it's plugged in. `U` is Sunday in `pmset`, and only one repeating wake schedule can exist.
 
 ## Secrets
 
@@ -138,4 +140,6 @@ State lives in `~/Library/Application Support/dashboard/` (week markers, alerts,
 | Mac `.env` | `ANTHROPIC_API_KEY` | grouping |
 | Mac `.env` | `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `NOTIFY_TO` | email |
 | Mac `.env` | `PRINT_DAY`, `PRINT_TIME`, `PRINTER_NAME` | schedule and printer (defaults: Sun, 09:00, CanonMF4800) |
+| Mac `.env` | `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | Access service token, to reach the API through Access |
 | `wrangler secret` | `PRINTER_TOKEN` | auth for the printer routes |
+| `wrangler.jsonc` `vars` (not secret) | `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` | which Access team and app the Worker's JWT check expects |
