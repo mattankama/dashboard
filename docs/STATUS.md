@@ -4,7 +4,7 @@ _Last updated: 2026-10-12_
 
 ## Phase
 
-**Phase 4 is under way, on Mattan's side.** Phases 1–3 are done. Mattan deployed the app (its database id is recorded in `wrangler.jsonc`). When turning on Cloudflare Access asked for a card, he chose to skip it, so on 2026-10-12 the app got its own password instead (Phase 4b, `tasks/todo.md`). What's left are Mattan's steps in **`docs/SETUP.md`**, from step 4 on. Claude hasn't deployed, printed, emailed or loaded anything into launchd. Everything is pushed to `github.com/mattankama/dashboard` (private, `main`).
+**Phase 4 is under way, on Mattan's side.** Phases 1–3 are done. Mattan deployed the app (its database id is recorded in `wrangler.jsonc`). When turning on Cloudflare Access asked for a card, he chose to skip it, so on 2026-10-12 the app got its own password instead (Phase 4b, `tasks/todo.md`). What's left are Mattan's steps in **`docs/SETUP.md`**: step 5 (the password) and step 6 (the Mac). Claude hasn't deployed, printed, emailed or loaded anything into launchd. Everything is pushed to `github.com/mattankama/dashboard` (private, `main`).
 
 ## Done
 
@@ -21,17 +21,17 @@ _Last updated: 2026-10-12_
 
 ## Next task
 
-**Mattan: follow `docs/SETUP.md` from step 4.4** (the database tables), then step 5 (the password). Then the first unattended Sunday, with `shipping-and-launch`: watch `npm run status`, the log, and the first emailed sheet.
+**Mattan: `docs/SETUP.md` step 5 (the password), then step 6.** Then the first unattended Sunday, with `shipping-and-launch`: watch `npm run status`, the log, and the first emailed sheet.
 
 ## Checklist: inputs and actions needed from Mattan
 
 **Your steps** (each explained in `docs/SETUP.md`)
 - [ ] 1. Look at the sample sheet (`npm run dry-run -- --sample`).
-- [ ] 2. Gmail app password → `apps/printer/.env` (`GMAIL_USER`, `GMAIL_APP_PASSWORD`, `NOTIFY_TO`).
+- [x] 2. Gmail app password → `apps/printer/.env` (`GMAIL_USER`, `GMAIL_APP_PASSWORD`, `NOTIFY_TO`). Set; the first real email (step 6) tests it.
 - [ ] 3. Optional: Anthropic API key → `ANTHROPIC_API_KEY` (a few cents a week; otherwise one plain list).
-- [ ] 4. Cloudflare: account, `wrangler login`, `npm run deploy` (done: the database id is recorded), `npm run db:migrate:remote`, printer token.
+- [x] 4. Cloudflare: account, `wrangler login`, `npm run deploy`, `npm run db:migrate:remote`, printer token. On 2026-10-12 `npm run status` reached the deployed app's printer route (0 items).
 - [ ] 5. Your password: `npm run deploy` again, `LOGIN_PASSWORD` and `SESSION_SECRET` with `npx wrangler secret put`, then sign in on the phone and Add to Home Screen. No card and no Zero Trust.
-- [ ] 6. On the Mac: `npm run status`, a test print (`npm run weekly -- --force`), `./install.sh`, allow notifications. Optionally, the `pmset` Sunday wake.
+- [ ] 6. On the Mac: `npm run status`, a test print (`npm run weekly -- --force`), `./install.sh`, allow notifications. Optionally, the `pmset` Sunday wake. (On 2026-10-12 the printer didn't answer on the network; it needs to be on for this.)
 
 **Decisions to confirm** (assumptions made while you were away)
 - [ ] **Catch-up:** a missed Sunday prints at the next run at home; older missed weeks are skipped. Installing marks the current week done, so it never prints by surprise.
