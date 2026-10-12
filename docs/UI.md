@@ -29,6 +29,15 @@ Options page: https://claude.ai/artifact/4XDzBZaW3WPE2JxbcbraZa
 - **Archive view:** tap the date to flip to the archive (the heading becomes "Archived"); tap it again to come back. The add field is hidden there. An empty archive says "Nothing archived yet." On the phone, swipe left restores and swipe right deletes, with no confirmation. On a laptop, tapping an archived item shows "Restore" and "Delete".
 - **Home-screen icon:** a dot grid with one dot marked in honey (`apps/web/public/icon.svg`, plus PNGs rendered from it).
 
+## Decided (2026-10-12)
+- **Sign-in screen** (the app has its own password instead of Cloudflare Access; Mattan chose "password at the bottom"). Signed out, the page looks like today's page with nothing on it: the date, the empty dot grid, and a password field where the add field is, with the same ↵ arrow. Placeholder "Password". Return or the arrow signs in. A phone stays signed in for a year. There's no sign-out button.
+- Details settled while building it (open to change):
+  - The arrow is muted until there's a password, like the add arrow.
+  - A wrong password says "Wrong password." above the field and clears it, like a lock screen.
+  - Signed out, the date doesn't flip to the archive.
+  - If a session ends while the app is open, the next action's line says what failed ("Couldn't save. Sign in.") and the password field comes back. Text in the add field is kept.
+  - A password manager's fill keeps the page's colours.
+
 ## Never
 Gradients, glassmorphism, glow, heavy shadows, card grids, emoji as icons, pill-badge clutter, purple/blue "AI" palettes, stock icon sets everywhere, bouncy animations, middle-dot meta strings ("A · B").
 

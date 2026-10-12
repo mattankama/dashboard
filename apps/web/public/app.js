@@ -32,6 +32,9 @@ const notice = byId("notice");
 const form = /** @type {HTMLFormElement} */ (byId("add"));
 const field = /** @type {HTMLTextAreaElement} */ (byId("new-item"));
 const save = /** @type {HTMLButtonElement} */ (byId("save"));
+const signInForm = /** @type {HTMLFormElement} */ (byId("sign-in"));
+const password = /** @type {HTMLInputElement} */ (byId("password"));
+const signInButton = /** @type {HTMLButtonElement} */ (byId("sign-in-button"));
 
 /** Today's page or the archive. */
 /** @type {View} */
@@ -41,6 +44,9 @@ let view = "active";
 let items = [];
 let loaded = false;
 let saving = false;
+/** The server wants the password: the page shows nothing but the date and the password field. */
+let signedOut = false;
+let signingIn = false;
 /** Today's page: the item open for editing, and its unsaved text. */
 /** @type {string | null} */
 let editingId = null;
@@ -57,7 +63,11 @@ let rendering = false;
 /** An error the API answered with, as opposed to a network failure. */
 class ApiError extends Error {}
 
+/** The API wants the password first (no session yet, or it ended). */
+class SignedOut extends ApiError {}
+
 /**
+ * Any request can find the session gone, so any 401 brings up the password field.
  * @param {string} path
  * @param {RequestInit} [init]
  * @returns {Promise<any>}
@@ -65,8 +75,13 @@ class ApiError extends Error {}
 async function api(path, init) {
   const res = await fetch(path, init);
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(body.error ?? `Request failed (${res.status})`);
-  return body;
+  if (res.ok) return body;
+  const message = body.error ?? `Request failed (${res.status})`;
+  if (res.status === 401) {
+    showSignIn();
+    throw new SignedOut(message);
+  }
+  throw new ApiError(message);
 }
 
 /**
@@ -236,7 +251,8 @@ function render() {
   const selection = active && document.activeElement === active ? [active.selectionStart, active.selectionEnd] : null;
 
   rendering = true;
-  list.replaceChildren(...items.map(renderItem));
+  // Signed out, nothing shows, even if a request that failed put an item back.
+  list.replaceChildren(...(signedOut ? [] : items.map(renderItem)));
   rendering = false;
   empty.hidden = !loaded || items.length > 0;
 
@@ -554,9 +570,80 @@ async function loadItems() {
     loaded = true;
     render();
   } catch (err) {
-    if (view === forView) showNotice(`Couldn't load your items. ${describe(err)}`, loadItems);
+    // Signed out, the password field is all there is to say.
+    if (view === forView && !(err instanceof SignedOut)) showNotice(`Couldn't load your items. ${describe(err)}`, loadItems);
   }
 }
+
+// ---- Signing in ----
+
+/** Today's page with nothing on it, and the password field where the add field was. */
+function showSignIn() {
+  if (signedOut) return;
+  signedOut = true;
+  takePending(); // nothing on the undo line can be sent now
+  selectedId = null;
+  view = "active";
+  page.classList.remove("archive");
+  empty.textContent = "A clean page.";
+  renderHeading();
+  flip.disabled = true;
+  items = [];
+  loaded = false;
+  render();
+  form.hidden = true;
+  signInForm.hidden = false;
+  syncPassword();
+  if (finePointer.matches) password.focus();
+}
+
+function showSignedIn() {
+  signedOut = false;
+  flip.disabled = false;
+  signInForm.hidden = true;
+  form.hidden = false;
+  password.value = "";
+  hideNotice();
+  syncField();
+  if (finePointer.matches) field.focus();
+  loadItems();
+}
+
+// The arrow stays a real button even when the field looks empty: a password
+// manager's fill may not be readable until the arrow or Return is pressed.
+function syncPassword() {
+  signInButton.disabled = signingIn;
+  signInButton.classList.toggle("waiting", password.value === "");
+}
+
+signInForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (signingIn) return;
+  if (password.value === "") {
+    password.focus();
+    return;
+  }
+
+  signingIn = true;
+  syncPassword();
+  try {
+    await api("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: password.value }),
+    });
+    showSignedIn();
+  } catch (err) {
+    showNotice(err instanceof ApiError ? describe(err) : `Couldn't sign in. ${describe(err)}`);
+    // Like a lock screen, a wrong password is cleared for the next try.
+    if (err instanceof SignedOut) password.value = "";
+  } finally {
+    signingIn = false;
+    syncPassword();
+  }
+});
+password.addEventListener("input", syncPassword);
+password.addEventListener("change", syncPassword);
 
 // ---- Adding ----
 

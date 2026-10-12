@@ -75,6 +75,9 @@ h1 {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Signed out, the date can't flip to the archive. */
+.flip:disabled { cursor: default; }
+
 /* The archive is for looking back: no add field there. */
 .archive .add { display: none; }
 .archive .bar { border-top-color: transparent; }
@@ -256,10 +259,11 @@ h1 {
   padding: 0.5rem 0.5rem 0.5rem calc(var(--gutter) + var(--row));
 }
 
-.add textarea {
+/* The add field, and signed out, the password field in its place. */
+.add textarea,
+.add input[type="password"] {
   flex: 1;
   min-width: 0;
-  max-height: calc(6 * var(--row) + 1.25rem);
   margin: 0;
   padding: 0.625rem 0;
   border: 0;
@@ -268,17 +272,31 @@ h1 {
   caret-color: var(--honey);
   font: inherit;
   line-height: var(--row);
+}
+
+.add textarea {
+  max-height: calc(6 * var(--row) + 1.25rem);
   resize: none;
 }
 
-.add textarea::placeholder {
+.add input[type="password"] { height: calc(var(--row) + 1.25rem); }
+
+.add textarea::placeholder,
+.add input::placeholder {
   color: var(--ink-muted);
   font-style: italic;
   opacity: 1;
 }
 
+/* A password manager's fill keeps the page's colours instead of a bright box. */
+.add input:autofill {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 100vmax var(--paper) inset;
+}
+
 /* The caret and the bar's honey top rule show focus here. */
-.add textarea:focus { outline: none; }
+.add textarea:focus,
+.add input:focus { outline: none; }
 
 .save {
   display: grid;
@@ -298,6 +316,9 @@ h1 {
   color: var(--honey);
   cursor: pointer;
 }
+
+/* The sign-in arrow looks asleep until there's a password, like the add arrow. */
+.save.waiting { color: var(--ink-muted); }
 
 .save:focus-visible,
 .flip:focus-visible,

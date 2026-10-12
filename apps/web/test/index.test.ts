@@ -38,6 +38,14 @@ describe("routing", () => {
     expect(html).toContain('<link rel="apple-touch-icon" href="/apple-touch-icon.png" />');
   });
 
+  it("has the sign-in form, hidden until the API asks for the password", async () => {
+    const html = await (await exports.default.fetch("http://localhost/")).text();
+
+    expect(html).toContain('<form id="sign-in" class="add sign-in" hidden>');
+    expect(html).toContain('type="password" autocomplete="current-password" placeholder="Password"');
+    expect(html).toContain('autocomplete="username"');
+  });
+
   it("serves the app's files with the right types", async () => {
     const assets = [
       ["/app.js", "javascript"],
