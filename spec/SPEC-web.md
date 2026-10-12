@@ -135,34 +135,28 @@ The UI routes do **not** accept the printer token, and the printer routes don't 
 
 ## UI
 
-One screen, phone-first, also fine on a laptop.
+One screen, phone-first, also fine on a laptop. **Look and interaction follow `docs/UI.md`.** That file wins over this section, and Mattan is asked about anything it leaves open.
 
 ```
-┌────────────────────────────────┐
-│ Dashboard                       │
-│ ┌────────────────────────────┐ │
-│ │ Keep in mind…              │ │  ← text area, Enter saves
-│ └────────────────────────────┘ │     (Shift+Enter = new line)
-│ [category (optional) ▾]  [Add] │
-│                                 │
-│ ★ Call Grandma more often      │  ← pinned first
-│   Personal                      │
-│ • Read "Thinking in Systems"   │
-│   Ideas                         │
-│ …                               │
-│                                 │
-│ Active · Archived (12)          │  ← switch views
-└────────────────────────────────┘
+┌──────────────────────┐
+│ Dashboard            │
+│ ★ Call Grandma       │  ← pinned first
+│ · Read Thinking in…  │
+│ · Ask about summer…  │
+│                      │
+├──────────────────────┤
+│ Keep in mind…      ↵ │  ← add field, always at the bottom
+└──────────────────────┘
 ```
 
-- **Add:** text area at the top, focused on load on desktop. Enter (or the Add button) saves. The new item appears in the list without a reload, the field clears and keeps focus. On failure the text stays in the field and an error shows.
-- **Each item:** text exactly as written (newlines kept), category in small type underneath. Tapping an item opens it for editing in place: text, category, Pin/Unpin, Archive, Save, Cancel.
-- **Archive:** item leaves the list and a toast says "Archived · Undo" for about 5 seconds.
-- **Archived view:** same list, with Restore and Delete. Delete asks for confirmation in the page (not a browser `confirm()` dialog).
-- **Empty state:** one plain line, e.g. "Nothing here yet."
-- **Style:** calm and plain, system font, readable at 16px+ (also avoids iOS zoom on focus). Tap targets at least 44px. Light and dark mode via `prefers-color-scheme`.
-- **Accessible:** real `<button>`s and `<label>`s, keyboard usable, visible focus.
-- **Safe rendering:** item text is put on the page with `textContent`, never `innerHTML`.
+- **Add:** a field at the bottom; return saves. The new item appears without a reload, and the field clears and keeps focus. On failure the text stays and an error shows.
+- **Each item:** text exactly as written (newlines kept). Tap to edit in place (text, category, pin, archive). Swipe left to archive.
+- **Archive:** the item leaves the list, and an undo toast shows for about 5 seconds.
+- **Archived view:** restore, or delete with an in-page confirmation (never a browser `confirm()`).
+- **Empty state:** one quiet line.
+- **Basics:** inputs 16px+ (avoids iOS zoom), tap targets ≥ 44px, dark theme only.
+- **Accessible:** real `<button>`s and `<label>`s, keyboard usable, visible focus. Every swipe action is also reachable without swiping.
+- **Safe rendering:** item text goes on the page with `textContent`, never `innerHTML`.
 - **Home screen:** `manifest.webmanifest` with name "Dashboard", `display: standalone` and an icon.
 
 ## Commands

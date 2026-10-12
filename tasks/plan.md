@@ -17,6 +17,7 @@ All of these come from the approved spec; they're repeated here because they sha
 - **All SQL lives in `src/db.ts`**, always with bound parameters. Validation in `src/validate.ts` is pure functions returning `{ ok, value | message }`.
 - **Tests run in the Workers runtime** (`@cloudflare/vitest-pool-workers`) against local D1, with migrations applied before tests.
 - **`npm run build` is `wrangler deploy --dry-run`**, which bundles the Worker without an account. Upstream `/build` runs the build after every task, and this gives it a real compile check.
+- **The UI follows `docs/UI.md`;** Mattan decides open design questions (asked at the start of Task 4).
 - **Item text is stored trimmed and otherwise untouched,** and rendered only with `textContent`.
 
 ## Dependency Graph
@@ -42,7 +43,7 @@ T4 … T9 ──▶ T10 PWA + polish ──▶ T11 docs + final check
 | 4 | UI: add and list items | M | 3 |
 | — | **Checkpoint A:** add an item from a phone-size viewport | | |
 | 5 | API: edit, pin, archive and restore (`PATCH`) | M | 3 |
-| 6 | UI: edit in place, pin, archive with undo | S | 4, 5 |
+| 6 | UI: tap to edit, swipe to archive, undo | S | 4, 5 |
 | 7 | Delete and the archived view (API + UI) | M | 5, 6 |
 | 8 | Category suggestions (API + UI) | M | 4 |
 | — | **Checkpoint B:** every UI story works and persists across reload | | |

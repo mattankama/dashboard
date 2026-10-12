@@ -18,6 +18,7 @@ Dashboard is **not** a to-do list or a calendar. Mattan already has both. It hol
 | `docs/CONTEXT.md` | The problem, the weekly ritual, scope, what success looks like |
 | `docs/ARCHITECTURE.md` | Components, data model, API, weekly job logic, printer details, secrets |
 | `docs/PRINT_LAYOUT.md` | Spec for the printed weekly sheet |
+| `docs/UI.md` | UI design decisions. Mattan owns UI design: ask before any visual choice not settled there. |
 | `docs/DECISIONS.md` | Why each choice was made. Add an entry when a choice changes. |
 | `docs/STATUS.md` | Current phase, next task, open questions. Update it every session. |
 | `apps/web/` | *(not built yet)* Cloudflare Worker + D1 + UI |
@@ -71,7 +72,7 @@ This is about the AI *inside* Dashboard, not Claude Code.
 | Turning a phase into a spec, then tasks | `spec-driven-development`, `planning-and-task-breakdown` |
 | Writing code | `/build` (next task) or `/build auto` (whole plan); both run `incremental-implementation` + `test-driven-development` |
 | Worker API routes and the printer↔web contract | `api-and-interface-design` |
-| The phone UI | `frontend-ui-engineering`, `browser-testing-with-devtools` |
+| The phone UI | `frontend-ui-engineering`, `frontend-design`, `browser-testing-with-devtools`; follow `docs/UI.md` and ask Mattan about open design choices |
 | Auth, tokens, secrets, Claude prompt handling | `security-and-hardening` |
 | Logging, and the launchd job's health | `observability-and-instrumentation` |
 | Library or API details (Workers, D1, Anthropic SDK, CUPS) | `source-driven-development` (check official docs; don't guess) |

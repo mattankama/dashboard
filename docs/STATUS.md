@@ -16,7 +16,7 @@ _Last updated: 2026-10-11_
 
 ## Next task
 
-**Phase 1: `apps/web`.** Plan written (`tasks/plan.md`, `tasks/todo.md`: 11 tasks, 3 checkpoints). **Wait for Mattan to say when to start building**, then `/build` begins with Task 1.
+**Phase 1: `apps/web`.** Plan written (`tasks/plan.md`, `tasks/todo.md`: 11 tasks, 3 checkpoints). **Wait for Mattan to say when to start building**, then `/build` begins with Task 1. UI design decisions are in `docs/UI.md`; Task 4 starts by asking Mattan its open questions.
 
 After that:
 - Phase 2: `apps/printer` with `--dry-run`.

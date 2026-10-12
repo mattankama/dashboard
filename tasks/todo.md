@@ -72,7 +72,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 - [ ] **Task 4: UI: add and list items**
 
-  **Description:** The first real screen: a heading, the add form (text area plus optional category field and Add button) and the active list. Enter saves and Shift+Enter adds a newline. The new item appears without a reload, and the field clears and keeps focus. On failure the text stays and an error shows. Item text is rendered with `textContent` only. Base styles: system font, 16px+ inputs, 44px tap targets, light and dark mode, plus the empty state "Nothing here yet."
+  **Description:** First, ask Mattan the open questions in `docs/UI.md` that affect this screen, and record the answers there. Then build the first real screen to `docs/UI.md`: the heading, the active list and the add field at the bottom (return saves; no Add button). The new item appears without a reload, and the field clears and keeps focus. On failure the text stays and an error shows. Item text is rendered with `textContent` only. Use `frontend-ui-engineering` + `frontend-design`.
 
   **Acceptance criteria:**
   - At a phone-size viewport, tap field → type → Enter adds the item, and it shows at the right place in the list.
@@ -120,7 +120,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 - [ ] **Task 6: UI: edit in place, pin, archive with undo**
 
-  **Description:** Tapping an item opens it for editing in place, with text, category, Pin/Unpin, Archive, Save and Cancel. Archive removes the item and shows an "Archived · Undo" toast for about 5 seconds; Undo restores it.
+  **Description:** Per `docs/UI.md`: tap an item to edit it in place (text, category, pin, archive), and swipe left to archive. Archive removes the item and shows an undo toast for about 5 seconds; Undo restores it. Archive is also reachable from the edit view, for mouse and keyboard. Ask Mattan about any interaction detail `docs/UI.md` doesn't settle.
 
   **Acceptance criteria:**
   - Edits, pin/unpin and archive persist across a page reload.
@@ -210,7 +210,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 - [ ] **Task 10: Home-screen app, accessibility and safe-text pass**
 
-  **Description:** Add `manifest.webmanifest` (name "Dashboard", `display: standalone`), an SVG icon and a PNG `apple-touch-icon` (rendered once with the installed headless Chrome), and the matching `<head>` tags. Then a pass over the whole UI: labels, real buttons, focus order, contrast in light and dark mode, and a final check that no user text ever goes through `innerHTML`.
+  **Description:** Add `manifest.webmanifest` (name "Dashboard", `display: standalone`), an SVG icon and a PNG `apple-touch-icon` (rendered once with the installed headless Chrome), and the matching `<head>` tags. Then a pass over the whole UI: labels, real buttons, focus order, contrast on the dark theme, a check against `docs/UI.md`, and a final check that no user text ever goes through `innerHTML`.
 
   **Acceptance criteria:**
   - Chrome DevTools shows a valid manifest with an icon.
@@ -219,7 +219,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
   **Verification:**
   - [ ] Standard checks pass
-  - [ ] Manual: DevTools Application → Manifest; keyboard-only run through add, edit, archive, undo; dark mode screenshot at a phone viewport
+  - [ ] Manual: DevTools Application → Manifest; keyboard-only run through add, edit, archive, undo; phone-viewport screenshot shown to Mattan for sign-off
 
   **Dependencies:** Tasks 4–8
 

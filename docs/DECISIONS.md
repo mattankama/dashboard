@@ -16,3 +16,6 @@ Mattan chose email. It doubles as a digital copy (PDF attached) and needs no ext
 
 ### 2026-10-11: Claude only groups
 Mattan wants Claude to look over the items each week but not be obtrusive. It groups similar items under plain headings and does nothing else: no focus line, no staleness flags, no rewording. If grouping fails, the sheet falls back to user categories or one list, so the print still happens.
+
+### 2026-10-11: UI design is Mattan's call
+Mattan wants a UI that doesn't feel generic, so Claude asks before making any visual choice instead of deciding. Settled so far: dark theme only, a warm amber accent, paper-planner type, the add field at the bottom, swipe to archive and tap to edit, and no buttons that could be hidden away. Details and the remaining questions are in `docs/UI.md`.
