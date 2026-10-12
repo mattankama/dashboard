@@ -31,7 +31,7 @@ async function dryRun(config: Config, flags: Flags, log: Logger): Promise<number
     log.error(`dry run needs ${missing.join(", ")} in apps/printer/.env (or use --sample)`);
     return 1;
   }
-  const items = flags.sample ? SAMPLE_ITEMS : await dashboardApi(config.apiUrl!, config.printerToken!).activeItems();
+  const items = flags.sample ? SAMPLE_ITEMS : await dashboardApi(config.apiUrl!, config.printerToken!, { accessServiceToken: config.accessServiceToken }).activeItems();
   if (items.length === 0) {
     log.info("dry run: no active items, so there's no sheet this week");
     return 0;
@@ -90,7 +90,7 @@ async function status(config: Config): Promise<number> {
     uid: process.getuid?.() ?? 0,
     state: fileState(config.stateDir),
     printerStatus: () => printerStatus(config.printerName, { run }),
-    activeItems: config.apiUrl && config.printerToken ? () => dashboardApi(config.apiUrl!, config.printerToken!).activeItems() : null,
+    activeItems: config.apiUrl && config.printerToken ? () => dashboardApi(config.apiUrl!, config.printerToken!, { accessServiceToken: config.accessServiceToken }).activeItems() : null,
   });
   console.log(formatStatus(info));
   return 0;
@@ -105,7 +105,7 @@ async function realRun(config: Config, flags: Flags, log: Logger): Promise<numbe
       log,
       state: fileState(config.stateDir),
       // runWeekly checks the settings before it calls any of these.
-      api: dashboardApi(config.apiUrl ?? "", config.printerToken ?? ""),
+      api: dashboardApi(config.apiUrl ?? "", config.printerToken ?? "", { accessServiceToken: config.accessServiceToken }),
       makeSheet: (items, target, now) =>
         buildSheet(items, { target, now, client: claudeClient(config), chromePath: config.chromePath, run, log }),
       printer: {

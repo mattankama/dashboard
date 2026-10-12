@@ -19,7 +19,7 @@ Never load launchd, deploy, print or email in these tasks.
 - [x] **Task 3: Access check in the Worker**
   - `/api/*` except `/api/printer/*` needs a valid `Cf-Access-Jwt-Assertion` (RS256, team certs, `aud`, `iss`, `exp`/`nbf`), else `403`. `localhost` skips the check. Off `localhost`, missing settings return `503`.
   - Tests use generated keys and mocked certs.
-- [ ] **Task 4: Service token from the Mac**
+- [x] **Task 4: Service token from the Mac**
   - `CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET` (both or neither) are sent on printer API requests. Tested; added to `.env.example`.
 - [ ] **Task 5: Deploy scripts**
   - `npm run deploy`, `npm run db:migrate:remote`, and `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` `vars` placeholders. `npm run build` still bundles.

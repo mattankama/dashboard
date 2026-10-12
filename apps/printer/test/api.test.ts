@@ -63,6 +63,30 @@ describe("activeItems", () => {
   });
 });
 
+describe("through Cloudflare Access", () => {
+  it("sends the service token on every request when it's configured", async () => {
+    const s = await server((req, res) => (req.method === "POST" ? sendJson(res, 201, { run: {} }) : sendJson(res, 200, { items: [] })));
+    const api = dashboardApi(s.url, TOKEN, { accessServiceToken: { id: "client-id.access", secret: "client-secret" } });
+
+    await api.activeItems();
+    await api.recordRun({ week: "2026-W41", status: "printed", printedAt: null, emailedAt: null });
+
+    for (const request of s.requests) {
+      assert.equal(request.headers["cf-access-client-id"], "client-id.access");
+      assert.equal(request.headers["cf-access-client-secret"], "client-secret");
+      assert.equal(request.headers.authorization, `Bearer ${TOKEN}`);
+    }
+  });
+
+  it("sends no Access headers when there's no service token", async () => {
+    const s = await server((_req, res) => sendJson(res, 200, { items: [] }));
+
+    await dashboardApi(s.url, TOKEN).activeItems();
+
+    assert.equal(s.requests[0].headers["cf-access-client-id"], undefined);
+  });
+});
+
 describe("recordRun", () => {
   it("posts the run as JSON with the token", async () => {
     const s = await server((_req, res) => sendJson(res, 201, { run: {} }));

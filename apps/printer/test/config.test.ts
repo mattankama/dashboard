@@ -60,6 +60,23 @@ describe("parseConfig", () => {
   });
 });
 
+describe("the Access service token", () => {
+  it("is read when both halves are set", () => {
+    const config = configOf({ CF_ACCESS_CLIENT_ID: "id.access", CF_ACCESS_CLIENT_SECRET: "secret" });
+    assert.deepEqual(config.accessServiceToken, { id: "id.access", secret: "secret" });
+  });
+
+  it("is off when neither is set", () => {
+    assert.equal(configOf({}).accessServiceToken, null);
+  });
+
+  it("must have both halves", () => {
+    const result = parseConfig({ CF_ACCESS_CLIENT_ID: "id.access" }, HOME);
+    assert.ok(!result.ok);
+    assert.deepEqual(result.errors, ["CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET go together: set both or neither"]);
+  });
+});
+
 describe("what a run needs", () => {
   it("a real run needs the API, the token and email; Claude is optional", () => {
     assert.deepEqual(missingForRealRun(configOf({})), [
