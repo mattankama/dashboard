@@ -92,9 +92,17 @@ The app is online now, but its data is locked: it answers "Access isn't configur
 
 ## 5. Lock it to you with Cloudflare Access (15 minutes, free)
 
-1. In the Cloudflare dashboard: **Workers & Pages** → **dashboard** → find **Cloudflare Access** (the Worker's **Access** tab, or **Settings → Domains & Routes → workers.dev**) → **Enable Cloudflare Access** for all traffic.
-   - Allow only your email address.
-   - If Cloudflare asks you to set up **Zero Trust** first, pick a team name; the free plan is enough.
+1. Turn on Access for your app.
+   - **Zero Trust, once:** if Cloudflare asks you to set up Zero Trust first, click **Zero Trust** in the dashboard's left sidebar.
+     - Pick a team name and write it down: it becomes your team address, `https://<team-name>.cloudflareaccess.com`, for part 2.
+     - Choose the **Free** plan. Cloudflare asks for payment details even for Free, but doesn't charge.
+   - **Lock the app:** in **Workers & Pages**, click **dashboard**, open its **Access** tab, and choose **Protect this Worker behind Access**. Then:
+     - choose **All traffic**;
+     - under **Authentication policy**, choose **Cloudflare account** (only people in your Cloudflare account, which is just you);
+     - click **Apply Access**.
+   - **Don't** choose **Email domain** with a public domain like `gmail.com`: that would let anyone with a Gmail address in.
+   - In an older dashboard layout, the same switch is under the Worker's **Settings → Domains & Routes → workers.dev → Enable Cloudflare Access**.
+   - **Check:** open your app's address in a private browser window. You should see a Cloudflare login page instead of the app.
 2. Copy two values into `apps/web/wrangler.jsonc` under `"vars"`:
    - `ACCESS_TEAM_DOMAIN`: your team address, like `https://<team>.cloudflareaccess.com`. It's under **Zero Trust → Settings**.
    - `ACCESS_AUD`: the **Application Audience (AUD) Tag**. It's under **Zero Trust → Access → Applications → (the dashboard app)**.
