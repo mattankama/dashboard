@@ -23,11 +23,14 @@ Options page: https://claude.ai/artifact/4XDzBZaW3WPE2JxbcbraZa
 - **Spacing:** one blank dot row between items, so every item has a finger-sized tap area.
 - **Placeholder:** "Worth remembering…". **Empty page:** "A clean page."
 - **Laptop:** a phone-width page centered in the window, with plain darker space (`#13100d`) around it.
+- **Editing:** tap an item to edit its text in place. The quiet words "Pin" (or "Unpin") and "Archive" appear under it. Return or tapping elsewhere saves; Esc cancels. No Save button.
+- **Swipe left to archive:** nothing is revealed. The item follows the finger and, past halfway, slides off the page.
+- **Undo line:** "Archived" with "Undo", just above the add field, for about 5 seconds.
+- **Archive view:** tap the date to flip to the archive (the heading becomes "Archived"); tap it again to come back. There, swipe left restores an item (it slides back to today's page), and tapping shows "Delete", which asks "Delete for good?" with "Delete" and "Keep".
 
 ## Never
 Gradients, glassmorphism, glow, heavy shadows, card grids, emoji as icons, pill-badge clutter, purple/blue "AI" palettes, stock icon sets everywhere, bouncy animations, middle-dot meta strings ("A · B").
 
 ## Still to ask Mattan
-1. Wording of the undo toast (Task 6).
-2. How to reach the archived view (Task 7).
-3. The home-screen icon (Task 10).
+1. What an empty archive says (Task 7).
+2. The home-screen icon (Task 10).
