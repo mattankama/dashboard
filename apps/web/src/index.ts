@@ -1,5 +1,5 @@
 import { error } from "./http";
-import { createItem, getItems } from "./items";
+import { createItem, getItems, patchItem } from "./items";
 
 type Handler = (request: Request, env: Env, params: Record<string, string | undefined>) => Promise<Response>;
 
@@ -8,7 +8,10 @@ interface Route {
   methods: Record<string, Handler>;
 }
 
-const routes: Route[] = [{ pattern: new URLPattern({ pathname: "/api/items" }), methods: { GET: getItems, POST: createItem } }];
+const routes: Route[] = [
+  { pattern: new URLPattern({ pathname: "/api/items" }), methods: { GET: getItems, POST: createItem } },
+  { pattern: new URLPattern({ pathname: "/api/items/:id" }), methods: { PATCH: patchItem } },
+];
 
 async function handleApi(request: Request, env: Env): Promise<Response> {
   for (const route of routes) {

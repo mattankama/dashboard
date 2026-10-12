@@ -98,7 +98,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 5: API: edit, pin, archive and restore (`PATCH /api/items/:id`)**
+- [x] **Task 5: API: edit, pin, archive and restore (`PATCH /api/items/:id`)**
 
   **Description:** Partial updates for `text`, `category`, `pinned` and `archived`, with the same validation as create. `archived: true` sets `archived_at` to now and `archived: false` clears it. Every change bumps `updated_at`.
 

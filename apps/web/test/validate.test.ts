@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateNewItem } from "../src/validate";
+import { validateNewItem, validatePatch } from "../src/validate";
 
 describe("validateNewItem", () => {
   it("accepts text alone, with no category and not pinned", () => {
@@ -81,5 +81,48 @@ describe("validateNewItem", () => {
     for (const body of [null, [], "text", 5]) {
       expect(validateNewItem(body)).toEqual({ ok: false, message: "Body must be a JSON object" });
     }
+  });
+});
+
+describe("validatePatch", () => {
+  it("accepts a text change and trims it", () => {
+    expect(validatePatch({ text: "  fixed typo " })).toEqual({ ok: true, value: { text: "fixed typo" } });
+  });
+
+  it("accepts pinned and archived on their own", () => {
+    expect(validatePatch({ pinned: true })).toEqual({ ok: true, value: { pinned: true } });
+    expect(validatePatch({ archived: false })).toEqual({ ok: true, value: { archived: false } });
+  });
+
+  it("accepts several fields at once", () => {
+    expect(validatePatch({ text: "x", category: null, pinned: false, archived: true })).toEqual({
+      ok: true,
+      value: { text: "x", category: null, pinned: false, archived: true },
+    });
+  });
+
+  it("applies the same text rules as creating an item", () => {
+    expect(validatePatch({ text: "   " })).toEqual({ ok: false, message: "text is required" });
+    expect(validatePatch({ text: "a".repeat(501) })).toEqual({
+      ok: false,
+      message: "text must be at most 500 characters",
+    });
+  });
+
+  it("rejects an empty update", () => {
+    expect(validatePatch({})).toEqual({ ok: false, message: "Nothing to update" });
+  });
+
+  it("rejects unknown fields", () => {
+    expect(validatePatch({ archive: true })).toEqual({ ok: false, message: "Unknown field: archive" });
+  });
+
+  it("rejects non-boolean pinned and archived", () => {
+    expect(validatePatch({ pinned: "yes" })).toEqual({ ok: false, message: "pinned must be true or false" });
+    expect(validatePatch({ archived: 0 })).toEqual({ ok: false, message: "archived must be true or false" });
+  });
+
+  it("rejects a body that isn't an object", () => {
+    expect(validatePatch([])).toEqual({ ok: false, message: "Body must be a JSON object" });
   });
 });

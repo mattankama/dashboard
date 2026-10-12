@@ -1,4 +1,4 @@
-import type { ItemStatus, NewItem } from "./validate";
+import type { ItemPatch, ItemStatus, NewItem } from "./validate";
 
 export interface Item {
   id: string;
@@ -61,4 +61,36 @@ export async function insertItem(db: D1Database, input: NewItem): Promise<Item> 
     .first<ItemRow>();
   if (row === null) throw new Error("INSERT ... RETURNING returned no row");
   return toItem(row);
+}
+
+// Column names come from this fixed list, never from the request; values are always bound.
+export async function updateItem(db: D1Database, id: string, patch: ItemPatch): Promise<Item | null> {
+  const now = new Date().toISOString();
+  const sets = ["updated_at = ?"];
+  const values: unknown[] = [now];
+
+  if (patch.text !== undefined) {
+    sets.push("text = ?");
+    values.push(patch.text);
+  }
+  if (patch.category !== undefined) {
+    sets.push("category = ?");
+    values.push(patch.category);
+  }
+  if (patch.pinned !== undefined) {
+    sets.push("pinned = ?");
+    values.push(patch.pinned ? 1 : 0);
+  }
+  if (patch.archived === true) {
+    // Archiving an already-archived item keeps its original archive time.
+    sets.push("archived_at = COALESCE(archived_at, ?)");
+    values.push(now);
+  }
+  if (patch.archived === false) sets.push("archived_at = NULL");
+
+  const row = await db
+    .prepare(`UPDATE items SET ${sets.join(", ")} WHERE id = ? RETURNING *`)
+    .bind(...values, id)
+    .first<ItemRow>();
+  return row === null ? null : toItem(row);
 }

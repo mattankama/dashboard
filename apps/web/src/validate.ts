@@ -69,6 +69,47 @@ export function validateNewItem(body: unknown): Result<NewItem> {
   return { ok: true, value: { text: text.value, category: category.value, pinned: pinned.value } };
 }
 
+export interface ItemPatch {
+  text?: string;
+  category?: string | null;
+  pinned?: boolean;
+  archived?: boolean;
+}
+
+const PATCH_FIELDS = new Set(["text", "category", "pinned", "archived"]);
+
+// Each field present is validated with the same rules as creating an item.
+export function validatePatch(body: unknown): Result<ItemPatch> {
+  if (!isObject(body)) return { ok: false, message: "Body must be a JSON object" };
+
+  const unknown = unknownField(body, PATCH_FIELDS);
+  if (unknown !== undefined) return { ok: false, message: `Unknown field: ${unknown}` };
+  if (Object.keys(body).length === 0) return { ok: false, message: "Nothing to update" };
+
+  const patch: ItemPatch = {};
+  if ("text" in body) {
+    const text = validateText(body.text);
+    if (!text.ok) return text;
+    patch.text = text.value;
+  }
+  if ("category" in body) {
+    const category = validateCategory(body.category);
+    if (!category.ok) return category;
+    patch.category = category.value;
+  }
+  if ("pinned" in body) {
+    const pinned = validateBoolean("pinned", body.pinned);
+    if (!pinned.ok) return pinned;
+    patch.pinned = pinned.value;
+  }
+  if ("archived" in body) {
+    const archived = validateBoolean("archived", body.archived);
+    if (!archived.ok) return archived;
+    patch.archived = archived.value;
+  }
+  return { ok: true, value: patch };
+}
+
 export function validateStatus(param: string | null): Result<ItemStatus> {
   if (param === null || param === "active") return { ok: true, value: "active" };
   if (param === "archived") return { ok: true, value: "archived" };
