@@ -66,15 +66,27 @@ Without a key, the sheet is one plain list. With one, Claude groups the items un
    cd ~/code/dashboard/apps/web
    npm run db:migrate:remote
    ```
-5. Make a printer token: a long random password the Mac uses to fetch your items.
-   ```
-   cd ~/code/dashboard/apps/web
-   openssl rand -hex 32
-   npx wrangler secret put PRINTER_TOKEN
-   ```
-   Paste the printed value when `wrangler` asks. Then in `apps/printer/.env`:
-   - set `PRINTER_TOKEN` to the same value;
-   - set `DASHBOARD_API_URL` to your app's address.
+5. Make a printer token. It's a password shared between your app on Cloudflare and your Mac, so the Mac can fetch your items. Both places need the exact same token.
+   1. Invent one: this prints a random line of 64 letters and digits. Copy that line.
+      ```
+      cd ~/code/dashboard/apps/web
+      openssl rand -hex 32
+      ```
+   2. Give it to Cloudflare: when this asks "Enter a secret value", paste the line and press Enter.
+      ```
+      cd ~/code/dashboard/apps/web
+      npx wrangler secret put PRINTER_TOKEN
+      ```
+   3. Give the same line to your Mac, along with your app's address. Open the Mac's settings file:
+      ```
+      open -e ~/code/dashboard/apps/printer/.env
+      ```
+      Change these two lines, using your own values (no slash at the end of the address):
+      ```
+      DASHBOARD_API_URL=https://dashboard.yourname.workers.dev
+      PRINTER_TOKEN=the-64-characters-you-copied
+      ```
+   **Your app's address** is the `https://dashboard.….workers.dev` line that `npm run deploy` printed in step 3. If it's gone, find it in the Cloudflare dashboard under **Workers & Pages → dashboard**, or run `npm run deploy` again (harmless) to see it.
 
 The app is online now, but its data is locked: it answers "Access isn't configured" until step 5. Your local test items don't move online; you start fresh.
 
