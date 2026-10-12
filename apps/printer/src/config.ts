@@ -19,8 +19,6 @@ export interface Config {
   chromePath: string;
   stateDir: string;
   logFile: string;
-  /** A Cloudflare Access service token, so the job can reach the web app through Access (Phase 4). */
-  accessServiceToken: { id: string; secret: string } | null;
 }
 
 export type ConfigResult = { ok: true; config: Config } | { ok: false; errors: string[] };
@@ -63,12 +61,6 @@ export function parseConfig(env: Record<string, string | undefined>, home: strin
   const notifyTo = value(env, "NOTIFY_TO");
   if (notifyTo !== null && !ADDRESS.test(notifyTo)) errors.push("NOTIFY_TO must be one email address");
 
-  const accessId = value(env, "CF_ACCESS_CLIENT_ID");
-  const accessSecret = value(env, "CF_ACCESS_CLIENT_SECRET");
-  if ((accessId === null) !== (accessSecret === null)) {
-    errors.push("CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET go together: set both or neither");
-  }
-
   if (errors.length > 0) return { ok: false, errors };
 
   return {
@@ -85,7 +77,6 @@ export function parseConfig(env: Record<string, string | undefined>, home: strin
       chromePath: value(env, "CHROME_PATH") ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
       stateDir: value(env, "DASHBOARD_STATE_DIR") ?? path.join(home, "Library", "Application Support", "dashboard"),
       logFile: value(env, "DASHBOARD_LOG_FILE") ?? path.join(home, "Library", "Logs", "dashboard.log"),
-      accessServiceToken: accessId && accessSecret ? { id: accessId, secret: accessSecret } : null,
     },
   };
 }

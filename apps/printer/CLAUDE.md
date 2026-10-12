@@ -38,4 +38,4 @@ npm run weekly                  # the real run: prints and emails when due (laun
 - **Claude only groups** (`CLAUDE.md`). Its answer is used only if every id appears exactly once with short headings; otherwise the fallback. Item text never goes in logs or email bodies.
 - **Fit levels were measured** with Charter on this Mac: about 26 one-line items fit a page at the roomiest level, and about 40 at 10pt (`test/pdf.test.ts`).
 - **Under launchd** there's no terminal, so log lines only go to the log file; `~/Library/Logs/dashboard.launchd.log` only catches crashes. After a Node upgrade, re-run `install.sh` (the job holds Node's full path).
-- **Behind Access**, the job sends `CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET` when set (both or neither).
+- **The job only needs `PRINTER_TOKEN`** to reach the web app. The app's sign-in password is for people, and the printer routes don't check it.

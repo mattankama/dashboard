@@ -50,19 +50,9 @@ function describeError(err: unknown): string {
 export function dashboardApi(
   baseUrl: string,
   token: string,
-  {
-    fetch = globalThis.fetch,
-    timeoutMs = 30_000,
-    accessServiceToken = null,
-  }: { fetch?: typeof globalThis.fetch; timeoutMs?: number; accessServiceToken?: { id: string; secret: string } | null } = {},
+  { fetch = globalThis.fetch, timeoutMs = 30_000 }: { fetch?: typeof globalThis.fetch; timeoutMs?: number } = {},
 ): DashboardApi {
-  // Behind Cloudflare Access, a service token gets the job through to the Worker,
-  // which then still checks the printer's own bearer token.
-  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
-  if (accessServiceToken) {
-    headers["CF-Access-Client-Id"] = accessServiceToken.id;
-    headers["CF-Access-Client-Secret"] = accessServiceToken.secret;
-  }
+  const headers = { Authorization: `Bearer ${token}` };
 
   return {
     async activeItems() {
