@@ -109,7 +109,7 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [ ] **Task 8: Email and notification**
+- [x] **Task 8: Email and notification**
 
   **Description:** `buildMessage` makes a MIME multipart message (text plus the PDF, base64). `sendEmail` runs `curl` against SMTPS, with the credentials on stdin and the message in a private temp file. `notify` shows a macOS notification, with its text passed as arguments rather than script.
 
