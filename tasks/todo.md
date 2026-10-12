@@ -17,8 +17,8 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - `GET /api/nope` returns `404 {"error":"Not found"}` with `Content-Type: application/json`.
 
   **Verification:**
-  - [ ] Standard checks pass (one test: unknown `/api` route → 404 JSON; one test: `/` → 200 HTML)
-  - [ ] Manual: `npm run dev`, then `curl -i localhost:8787/api/nope` and open `localhost:8787` in the browser
+  - [x] Standard checks pass (one test: unknown `/api` route → 404 JSON; one test: `/` → 200 HTML)
+  - [x] Manual: `npm run dev`, then `curl -i localhost:8787/api/nope` and open `localhost:8787` in the browser
 
   **Dependencies:** None
 
@@ -38,8 +38,8 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - `npm run db:migrate:local` applies cleanly to a fresh `.wrangler` state.
 
   **Verification:**
-  - [ ] Standard checks pass (new `test/schema.test.ts`)
-  - [ ] Manual: `rm -rf .wrangler && npm run db:migrate:local`
+  - [x] Standard checks pass (new `test/schema.test.ts`)
+  - [x] Manual: `rm -rf .wrangler && npm run db:migrate:local`
 
   **Dependencies:** Task 1
 
@@ -59,8 +59,8 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - Non-JSON content type → `415`, wrong method → `405`, malformed JSON → `400`.
 
   **Verification:**
-  - [ ] Standard checks pass (`test/items.test.ts`, `test/validate.test.ts`, including text with `<b>`, quotes, emoji and newlines round-tripping exactly)
-  - [ ] Manual: `curl` a create and a list against `npm run dev`
+  - [x] Standard checks pass (`test/items.test.ts`, `test/validate.test.ts`, including text with `<b>`, quotes, emoji and newlines round-tripping exactly)
+  - [x] Manual: `curl` a create and a list against `npm run dev`
 
   **Dependencies:** Task 2
 
@@ -80,8 +80,8 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - `public/app.js` is `// @ts-check` and passes `npm run typecheck`.
 
   **Verification:**
-  - [ ] Standard checks pass
-  - [ ] Manual (`browser-testing-with-devtools`): Chrome at a phone viewport against `npm run dev`. Add an item; reload and it's still there; no console errors; empty state shows on a fresh database.
+  - [x] Standard checks pass
+  - [x] Manual (`browser-testing-with-devtools`): Chrome at a phone viewport against `npm run dev`. Add an item; reload and it's still there; no console errors; empty state shows on a fresh database.
 
   **Dependencies:** Task 3
 
@@ -92,9 +92,9 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 ---
 
 ### Checkpoint A: after Tasks 1–4
-- [ ] Standard checks pass
-- [ ] Adding an item from a phone-size viewport works end to end (spec success criterion 3)
-- [ ] Review with Mattan before continuing
+- [x] Standard checks pass
+- [x] Adding an item from a phone-size viewport works end to end (spec success criterion 3)
+- [x] Review with Mattan before continuing
 
 ---
 
@@ -108,7 +108,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - Pinning puts the item at the top of the active list.
 
   **Verification:**
-  - [ ] Standard checks pass (extended `test/items.test.ts`, `test/validate.test.ts`)
+  - [x] Standard checks pass (extended `test/items.test.ts`, `test/validate.test.ts`)
 
   **Dependencies:** Task 3
 
@@ -128,8 +128,8 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - Editing is keyboard-usable (Escape cancels) and has visible focus.
 
   **Verification:**
-  - [ ] Standard checks pass
-  - [ ] Manual at a phone viewport: edit text, pin, unpin, archive, undo, archive without undo, then reload and check each result.
+  - [x] Standard checks pass
+  - [x] Manual at a phone viewport: edit text, pin, unpin, archive, undo, archive without undo, then reload and check each result.
 
   **Dependencies:** Tasks 4, 5
 
@@ -151,8 +151,8 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - Flipping between today's page and the archive shows the right items, heading and add field.
 
   **Verification:**
-  - [ ] Standard checks pass (delete tests in `test/items.test.ts`, swipe/sort helpers in `test/lib.test.ts`)
-  - [ ] Manual: touch at 390px and mouse at 1280px in headless Chrome: flip, restore, delete, undo each, reload.
+  - [x] Standard checks pass (delete tests in `test/items.test.ts`, swipe/sort helpers in `test/lib.test.ts`)
+  - [x] Manual: touch at 390px and mouse at 1280px in headless Chrome: flip, restore, delete, undo each, reload.
 
   **Dependencies:** Tasks 5, 6
 
@@ -167,9 +167,9 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 ---
 
 ### Checkpoint B: after Tasks 5–7
-- [ ] Standard checks pass
-- [ ] Every UI story (spec user stories 1–6) works and persists across reload (spec success criteria 4–6)
-- [ ] Review with Mattan before continuing
+- [x] Standard checks pass
+- [x] Every UI story (spec user stories 1–6) works and persists across reload (spec success criteria 4–6)
+- [x] Review with Mattan before continuing
 
 ---
 
@@ -183,8 +183,8 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - The archived items never appear in `GET /api/printer/items`.
 
   **Verification:**
-  - [ ] Standard checks pass (`test/printer.test.ts`)
-  - [ ] Manual: the `curl` from spec success criterion 7, with and without the token from `.dev.vars`
+  - [x] Standard checks pass (`test/printer.test.ts`)
+  - [x] Manual: the `curl` from spec success criterion 7, with and without the token from `.dev.vars`
 
   **Dependencies:** Task 3
 
@@ -204,8 +204,8 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - `grep innerHTML public/` finds nothing that touches user data.
 
   **Verification:**
-  - [ ] Standard checks pass
-  - [ ] Manual: DevTools Application → Manifest; keyboard-only run through add, edit, archive, undo; phone-viewport screenshot shown to Mattan for sign-off
+  - [x] Standard checks pass
+  - [x] Manual: DevTools Application → Manifest; keyboard-only run through add, edit, archive, undo; phone-viewport screenshot shown to Mattan for sign-off
 
   **Dependencies:** Tasks 4–7
 
@@ -215,7 +215,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 11: Docs and final check against the spec**
+- [x] **Task 11: Docs and final check against the spec**
 
   **Description:** Write `apps/web/CLAUDE.md` (commands and gotchas) and add the commands to the root `CLAUDE.md`. Update `docs/ARCHITECTURE.md` (`wrangler.jsonc`, `print_runs.created_at`) and add the Phase 1 entries to `docs/DECISIONS.md` (no UI framework, no router library, Workers-runtime tests, `wrangler.jsonc`). Then walk through spec success criteria 1–9 from a clean state.
 
@@ -225,8 +225,8 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
   - The docs describe what was actually built.
 
   **Verification:**
-  - [ ] Standard checks pass
-  - [ ] Manual: the clean-state run above, plus a final run through all UI stories at a phone viewport
+  - [x] Standard checks pass
+  - [x] Manual: the clean-state run above, plus a final run through all UI stories at a phone viewport
 
   **Dependencies:** Tasks 1–10
 
@@ -237,6 +237,6 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 ---
 
 ### Checkpoint C: Phase 1 complete
-- [ ] Standard checks pass
-- [ ] All spec success criteria met
-- [ ] Review with Mattan before Phase 2 (`apps/printer`)
+- [x] Standard checks pass
+- [x] All spec success criteria met
+- [x] Review with Mattan before Phase 2 (`apps/printer`)

@@ -21,7 +21,7 @@ Dashboard is **not** a to-do list or a calendar. Mattan already has both. It hol
 | `docs/UI.md` | UI design decisions. Mattan owns UI design: ask before any visual choice not settled there. |
 | `docs/DECISIONS.md` | Why each choice was made. Add an entry when a choice changes. |
 | `docs/STATUS.md` | Current phase, next task, open questions. Update it every session. |
-| `apps/web/` | *(not built yet)* Cloudflare Worker + D1 + UI |
+| `apps/web/` | Cloudflare Worker + D1 + phone UI (Phase 1, built). Its own `CLAUDE.md` has commands and gotchas. |
 | `apps/printer/` | *(not built yet)* Mac weekly job: fetch → group → PDF → print → email |
 | `.agents/skills/` | Engineering workflow skills (linked into `.claude/skills/`; the source is `skills-lock.json`). Don't edit them. If they go missing, restore them with `npx skills experimental_install`. |
 | `.claude/commands/build.md` | `/build`, copied from upstream agent-skills (only the `agent-skills:` prefix removed from skill names). Don't edit it. |
@@ -37,7 +37,19 @@ Dashboard is **not** a to-do list or a calendar. Mattan already has both. It hol
 
 ## Commands
 
-None yet. Add `npm` scripts here as `apps/*` are built (dev, test, typecheck, deploy, `weekly --dry-run`).
+**`apps/web`** (run inside `apps/web/`; details in `apps/web/CLAUDE.md`):
+
+```
+npm install
+cp .dev.vars.example .dev.vars   # once: local PRINTER_TOKEN
+npm run db:migrate:local         # once per fresh checkout
+npm run dev                      # http://localhost:8787
+npm test
+npm run typecheck
+npm run build                    # bundle only (wrangler deploy --dry-run), no account
+```
+
+Add `apps/printer` commands here when it's built (`weekly --dry-run`, etc.).
 
 ## Product rule: the in-app AI only groups
 

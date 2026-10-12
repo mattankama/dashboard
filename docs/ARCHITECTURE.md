@@ -17,7 +17,7 @@ Adding items has to work from anywhere, even when the Mac is asleep, so storage 
 ## Repo layout (planned)
 
 ```
-apps/web/       Cloudflare Worker: API + static UI, D1 migrations, wrangler.toml
+apps/web/       Cloudflare Worker: API + static UI (public/), D1 migrations, wrangler.jsonc
 apps/printer/   Mac weekly job: fetch, group, render, print, email
   launchd/      org.dashboard.weekly.plist
   install.sh    copies the plist to ~/Library/LaunchAgents and loads it
@@ -47,6 +47,7 @@ docs/
 | printed_at | text, nullable | |
 | emailed_at | text, nullable | |
 | status | text | `printed`, `emailed_only` or `failed` |
+| created_at | text (ISO) | when the run was recorded, even if it failed |
 
 ## API (Worker)
 
@@ -57,10 +58,18 @@ UI routes sit behind Cloudflare Access:
 - `PATCH /api/items/:id` with `{ text?, category?, pinned?, archived? }`
 - `DELETE /api/items/:id`
 
+Active items list pinned first, then newest; archived items most recently archived first. Input is validated (text 1–500 characters, trimmed only; unknown fields rejected), and mutating requests must be `application/json`.
+
 Printer routes use a bearer token (`PRINTER_TOKEN`), with an Access service-token bypass for this path only:
 
 - `GET /api/printer/items`: active items only
-- `POST /api/printer/runs`: records a print run
+- `POST /api/printer/runs`: records a print run (`{ week, status, printedAt?, emailedAt? }`)
+
+A wrong or missing token gets `401`; if `PRINTER_TOKEN` isn't set the routes return `503`, never open access.
+
+## UI (`apps/web/public`)
+
+Static HTML, CSS and `// @ts-check` JavaScript, no framework or build step. Phone-first: actions are swipes on the phone and words on a laptop. Every design choice is Mattan's and lives in `docs/UI.md`.
 
 ## Weekly job (`apps/printer`)
 

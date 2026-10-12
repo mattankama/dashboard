@@ -1,6 +1,6 @@
 # Spec: `web` (Phase 1: Worker + D1 + phone UI)
 
-_Status: **approved 2026-10-11.** Mattan left the open questions to Claude; the answers are under Resolved Questions._
+_Status: **built and checked 2026-10-11** (approved earlier that day; Mattan's later UI choices are in `docs/UI.md`)._
 
 Module id: `web`. It is the provider side of the printer↔web contract; `printer` (Phase 2) depends on it.
 
