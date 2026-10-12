@@ -187,3 +187,31 @@ export async function runWeekly(deps: JobDeps, options: RunOptions): Promise<Job
 ## Out of scope
 
 launchd (Phase 3), `pmset` wake, deploying the Worker (Phase 4), item expiry (decided: none).
+
+---
+
+## Phase 3: running every hour (launchd)
+
+_Added 2026-10-12 ("continue with the plan"). Loading the job on the Mac stays Mattan's step: `CLAUDE.md` says to ask first._
+
+**Objective:** the weekly job runs by itself every hour, survives reboots and sleep, and is easy to install, check and remove.
+
+- **Job file:** `apps/printer/launchd/org.dashboard.weekly.plist`, made by `install.sh` from a template (`src/launchd.ts`, which escapes paths for XML).
+  - It runs Node 24 directly. launchd doesn't load nvm, so the install writes in the full path to `node`.
+  - `StartInterval` 3600 and `RunAtLoad` (so it also runs at login and on load). `PATH` is set to the system tools (`lp`, `lpstat`, `dns-sd`, `curl`, `osascript`).
+  - stdout/stderr go to `~/Library/Logs/dashboard.launchd.log`. The job only echoes to a terminal, so that file holds just crashes.
+- **`install.sh`:** checks Node ≥ 24 and `node_modules`; renders the job file and checks it with `plutil -lint`; marks this week done (so installing mid-week doesn't print straight away, unless `--print-this-week`); loads it (`launchctl bootout` an old copy, then `bootstrap`).
+  - `--dry-run` only renders and checks the file. Re-run after a Node upgrade.
+- **`uninstall.sh`:** unloads the job and removes the file. State and logs are kept.
+- **`npm run status`:** a plain-English health check, with no side effects:
+  - the next print time, and this week's state;
+  - when the job last ran, and whether it's installed;
+  - which settings are missing (names only);
+  - whether the printer and the web app answer.
+- **`--mark-done`:** marks this week done without printing (used by `install.sh`).
+- **Optional wake** before 09:00 on Sundays (needs `sudo`; Mattan's call): `sudo pmset repeat wakeorpoweron U 08:55:00`. `U` is Sunday in `pmset`, and macOS keeps only one repeating wake/power-on schedule.
+
+**Success criteria:**
+- `./install.sh --dry-run` renders a job file that passes `plutil -lint`, and `bash -n` passes on both scripts.
+- The rendering, `--status` and `--mark-done` logic is unit-tested.
+- Nothing is loaded into launchd during development.

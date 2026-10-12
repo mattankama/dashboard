@@ -265,3 +265,24 @@ Deploying, Cloudflare Access and the Access JWT check, custom domain, offline ca
 1. **Categories:** none in the UI. Mattan decided this while choosing the look (`docs/UI.md`); the API keeps the optional field.
 2. **Item length limit:** 500 characters. These are short notes to keep in mind, and the sheet has to fit on one or two pages. Raising the limit later is a one-line change.
 3. **Print day/time and expiry** don't affect Phase 1. They're decided in Phase 2 (default Sunday 09:00, archive by hand).
+
+---
+
+## Phase 4 (prepared without an account): going online
+
+_Added 2026-10-12. Deploying, changing Cloudflare settings and creating secrets are Mattan's steps (`CLAUDE.md`); this part builds and documents everything that doesn't need the account._
+
+**Objective:** the app works from Mattan's phone anywhere, only Mattan can use it, and the Mac job can still reach its routes.
+
+- **Access check in the Worker** (defense in depth behind Cloudflare Access):
+  - Every `/api/*` route except `/api/printer/*` needs a valid `Cf-Access-Jwt-Assertion` JWT: RS256, signed by a key from `https://<team>.cloudflareaccess.com/cdn-cgi/access/certs` (cached), with `aud` containing `ACCESS_AUD`, `iss` equal to the team URL, and not expired.
+  - Requests to `localhost` (local dev and tests) skip it. Anywhere else, a missing `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` returns `503`; it never runs open.
+  - Bad or missing JWT → `403`, as in Cloudflare's own example. Printer routes keep their bearer token.
+- **The Mac job through Access:** when `CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET` are set in `apps/printer/.env`, the printer's requests also send them, as a Cloudflare Access service token.
+- **Deploy scripts** in `apps/web`: `npm run deploy` (`wrangler deploy`), `npm run db:migrate:remote`. Placeholder `vars` in `wrangler.jsonc` for the Access settings.
+- **`docs/SETUP.md`:** Mattan's step-by-step guide, covering the Cloudflare account, deploy, database, printer token, Access, the Mac's `.env`, install and a first test print.
+
+**Success criteria:**
+- Tests cover: a valid JWT; wrong `aud`, `iss` or signature; expired; missing; the `localhost` skip; the fail-closed `503`; printer routes untouched.
+- The service-token headers are tested in `apps/printer`.
+- `npm run build` still bundles. Nothing is deployed.
