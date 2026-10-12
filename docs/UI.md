@@ -27,9 +27,10 @@ Options page: https://claude.ai/artifact/4XDzBZaW3WPE2JxbcbraZa
 - **Swipes (phone, today's page):** left archives, right pins or unpins. Nothing is revealed; the item follows the finger and acts once it's past halfway.
 - **Undo lines:** "Archived", "Restored" or "Deleted" with "Undo", just above the add field, for about 5 seconds. A delete is only sent once its line goes away.
 - **Archive view:** tap the date to flip to the archive (the heading becomes "Archived"); tap it again to come back. The add field is hidden there. An empty archive says "Nothing archived yet." On the phone, swipe left restores and swipe right deletes, with no confirmation. On a laptop, tapping an archived item shows "Restore" and "Delete".
+- **Home-screen icon:** a dot grid with one dot marked in honey (`apps/web/public/icon.svg`, plus PNGs rendered from it).
 
 ## Never
 Gradients, glassmorphism, glow, heavy shadows, card grids, emoji as icons, pill-badge clutter, purple/blue "AI" palettes, stock icon sets everywhere, bouncy animations, middle-dot meta strings ("A · B").
 
 ## Still to ask Mattan
-1. The home-screen icon (Task 10).
+Nothing open. Ask before any new visual or interaction choice.

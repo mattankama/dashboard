@@ -22,7 +22,6 @@ function byId(id) {
 const page = /** @type {HTMLElement} */ (document.querySelector(".page"));
 const flip = /** @type {HTMLButtonElement} */ (byId("flip"));
 const flipLabel = byId("flip-label");
-const flipHint = byId("flip-hint");
 const today = /** @type {HTMLTimeElement} */ (byId("today"));
 const list = /** @type {HTMLUListElement} */ (byId("items"));
 const empty = byId("empty");
@@ -125,16 +124,18 @@ function renderDate() {
   const now = new Date();
   today.textContent = formatDay(now, navigator.language);
   today.dateTime = isoDay(now);
+  renderHeading();
 }
 
 /** The heading is today's date, or "Archived"; tapping it flips between the two. */
 function renderHeading() {
+  // The spoken name starts with the visible words, then says what a tap does.
   if (view === "active") {
     flipLabel.replaceChildren(today);
-    flipHint.textContent = ", show archived items";
+    flip.setAttribute("aria-label", `${today.textContent}, show archived items`);
   } else {
     flipLabel.replaceChildren("Archived");
-    flipHint.textContent = ", back to today";
+    flip.setAttribute("aria-label", "Archived, back to today");
   }
 }
 
@@ -708,7 +709,6 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("pagehide", settleUndo);
 
 renderDate();
-renderHeading();
 syncField();
 // Phones only show the keyboard after a tap, so focus on load only with a mouse.
 if (finePointer.matches) field.focus();

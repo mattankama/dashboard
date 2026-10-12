@@ -6,8 +6,12 @@
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#1c1814" />
     <title>Dashboard</title>
-    <!-- No icon yet (Task 10); an empty one stops the browser asking for /favicon.ico. -->
-    <link rel="icon" href="data:," />
+    <meta name="apple-mobile-web-app-title" content="Dashboard" />
+    <!-- In the home-screen app, the dark page runs up under the status bar (safe-area padding keeps text clear). -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="stylesheet" href="/style.css" />
     <script type="module" src="/app.js"></script>
   </head>
@@ -16,7 +20,7 @@
       <header class="head">
         <h1>
           <button id="flip" class="flip" type="button">
-            <span id="flip-label"><time id="today"></time></span><span id="flip-hint" class="visually-hidden"></span>
+            <span id="flip-label"><time id="today"></time></span>
           </button>
         </h1>
       </header>

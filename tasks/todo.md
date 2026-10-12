@@ -194,7 +194,7 @@ All commands run from `apps/web/`. "Standard checks" below means all three of th
 
 ---
 
-- [ ] **Task 10: Home-screen app, accessibility and safe-text pass**
+- [x] **Task 10: Home-screen app, accessibility and safe-text pass**
 
   **Description:** Add `manifest.webmanifest` (name "Dashboard", `display: standalone`), an SVG icon and a PNG `apple-touch-icon` (rendered once with the installed headless Chrome), and the matching `<head>` tags. Then a pass over the whole UI: labels, real buttons, focus order, contrast on the dark theme, a check against `docs/UI.md`, and a final check that no user text ever goes through `innerHTML`.
 

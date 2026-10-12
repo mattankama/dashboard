@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <!-- Dashboard's icon: a dot grid with one dot marked in honey (docs/UI.md). -->
+  <rect width="180" height="180" fill="#1c1814"/>
+  <g fill="#4a3e33"><circle cx="36" cy="36" r="4.5"/><circle cx="72" cy="36" r="4.5"/><circle cx="108" cy="36" r="4.5"/><circle cx="144" cy="36" r="4.5"/><circle cx="36" cy="72" r="4.5"/><circle cx="108" cy="72" r="4.5"/><circle cx="144" cy="72" r="4.5"/><circle cx="36" cy="108" r="4.5"/><circle cx="72" cy="108" r="4.5"/><circle cx="108" cy="108" r="4.5"/><circle cx="144" cy="108" r="4.5"/><circle cx="36" cy="144" r="4.5"/><circle cx="72" cy="144" r="4.5"/><circle cx="108" cy="144" r="4.5"/><circle cx="144" cy="144" r="4.5"/></g>
+  <circle cx="72" cy="72" r="10" fill="#e2a651"/>
+</svg>

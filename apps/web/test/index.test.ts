@@ -19,12 +19,25 @@ describe("routing", () => {
     expect(await res.text()).toContain("<title>Dashboard</title>");
   });
 
-  it("serves the app's script and styles", async () => {
+  it("links the home-screen manifest and icons", async () => {
+    const html = await (await exports.default.fetch("http://localhost/")).text();
+
+    expect(html).toContain('<link rel="manifest" href="/manifest.webmanifest" />');
+    expect(html).toContain('<link rel="icon" href="/icon.svg" type="image/svg+xml" />');
+    expect(html).toContain('<link rel="apple-touch-icon" href="/apple-touch-icon.png" />');
+  });
+
+  it("serves the app's files with the right types", async () => {
     const assets = [
       ["/app.js", "javascript"],
       ["/lib.js", "javascript"],
       ["/swipe.js", "javascript"],
       ["/style.css", "text/css"],
+      ["/manifest.webmanifest", "manifest+json"],
+      ["/icon.svg", "image/svg+xml"],
+      ["/apple-touch-icon.png", "image/png"],
+      ["/icon-192.png", "image/png"],
+      ["/icon-512.png", "image/png"],
     ];
     for (const [path, type] of assets) {
       const res = await exports.default.fetch(`http://localhost${path}`);
