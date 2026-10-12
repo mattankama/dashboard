@@ -1,15 +1,15 @@
 # Setting up Dashboard
 
-Everything that needs your accounts, passwords or OK, in order. Each part works on its own, so you can stop between parts. Run commands in Terminal from the repo folder (`~/code/dashboard`).
+Everything that needs your accounts, passwords or OK, in order. Each part works on its own, so you can stop between parts. Every command block starts by going to its folder, so you can paste it from anywhere in Terminal.
 
-At any point, `cd apps/printer && npm run status` shows what's set up and what isn't.
+At any point, `cd ~/code/dashboard/apps/printer && npm run status` shows what's set up and what isn't.
 
 ---
 
 ## 1. Look at the sheet (2 minutes, no accounts)
 
 ```
-cd apps/printer
+cd ~/code/dashboard/apps/printer
 npm run dry-run -- --sample
 open out/
 ```
@@ -24,7 +24,7 @@ The job emails the PDF from a Gmail (or Google Workspace) account, using an **ap
 2. Search the account settings for **App passwords**, and create one named "Dashboard". Copy the 16 letters.
 3. Make the settings file and open it:
    ```
-   cd apps/printer
+   cd ~/code/dashboard/apps/printer
    cp .env.example .env
    open -e .env
    ```
@@ -41,18 +41,19 @@ Without a key, the sheet is one plain list. With one, Claude groups the items un
 
 1. At the Claude Console (`console.anthropic.com`), create an API key and add a small amount of prepaid credit. This is billed separately from a Claude subscription.
 2. In `apps/printer/.env`, set `ANTHROPIC_API_KEY=` to the key.
-3. Check it: `npm run dry-run -- --sample`, then open the new PDF in `out/`. It should have headings now.
+3. Check it: `cd ~/code/dashboard/apps/printer && npm run dry-run -- --sample`, then open the new PDF in `out/`. It should have headings now.
 
 ## 4. Put the app online with Cloudflare (20 minutes, free)
 
 1. Create a free account at `dash.cloudflare.com/sign-up`.
 2. Log in from the Mac (a browser window opens):
    ```
-   cd apps/web
+   cd ~/code/dashboard/apps/web
    npx wrangler login
    ```
 3. Deploy:
    ```
+   cd ~/code/dashboard/apps/web
    npm run deploy
    ```
    It prints your app's address, like `https://dashboard.<your-name>.workers.dev`. If it asks you to pick a `workers.dev` name, any name is fine.
@@ -62,10 +63,12 @@ Without a key, the sheet is one plain list. With one, Claude groups the items un
      ```
 4. Create the database tables (answer `y`):
    ```
+   cd ~/code/dashboard/apps/web
    npm run db:migrate:remote
    ```
 5. Make a printer token: a long random password the Mac uses to fetch your items.
    ```
+   cd ~/code/dashboard/apps/web
    openssl rand -hex 32
    npx wrangler secret put PRINTER_TOKEN
    ```
@@ -85,6 +88,7 @@ The app is online now, but its data is locked: it answers "Access isn't configur
    - `ACCESS_AUD`: the **Application Audience (AUD) Tag**. It's under **Zero Trust → Access → Applications → (the dashboard app)**.
 3. Deploy again and save:
    ```
+   cd ~/code/dashboard/apps/web
    npm run deploy
    git add wrangler.jsonc && git commit -m "Turn on the Access check" && git push
    ```
@@ -96,13 +100,15 @@ The app is online now, but its data is locked: it answers "Access isn't configur
 
 ## 6. Start the weekly printing (5 minutes)
 
-1. Check everything: `cd apps/printer && npm run status`. "Settings", "Printer" and "Web app" should all be fine. "Installed" will say no.
+1. Check everything: `cd ~/code/dashboard/apps/printer && npm run status`. "Settings", "Printer" and "Web app" should all be fine. "Installed" will say no.
 2. A first real test: this prints a sheet and emails you right away.
    ```
+   cd ~/code/dashboard/apps/printer
    npm run weekly -- --force
    ```
 3. Install the hourly job. It prints on Sundays at 09:00 from now on, and catches up if the Mac was away:
    ```
+   cd ~/code/dashboard/apps/printer
    ./install.sh
    npm run status
    ```
@@ -115,7 +121,7 @@ The app is online now, but its data is locked: it answers "Access isn't configur
 
 ## If something's off
 
-- `npm run status` first (in `apps/printer`).
+- `cd ~/code/dashboard/apps/printer && npm run status` first.
 - The log is `~/Library/Logs/dashboard.log`. Crashes go to `~/Library/Logs/dashboard.launchd.log`.
-- Stop the weekly job: `./uninstall.sh` (your settings stay).
-- After upgrading Node with nvm, run `./install.sh` again.
+- Stop the weekly job: `cd ~/code/dashboard/apps/printer && ./uninstall.sh` (your settings stay).
+- After upgrading Node with nvm, run it again: `cd ~/code/dashboard/apps/printer && ./install.sh`.
