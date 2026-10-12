@@ -97,7 +97,7 @@ Never print or email in this phase: only fakes, `--dry-run` and `--sample`.
 
 ---
 
-- [ ] **Task 7: Printer**
+- [x] **Task 7: Printer**
 
   **Description:** `isReachable` (`lpstat -p` enabled, plus a 3-second `dns-sd -L` lookup of the queue's Bonjour name, read from `lpstat -v`), `printPdf` (`lp -d … -o media=Letter`), then wait until the job leaves `lpstat -W not-completed`; if 5 minutes pass, `cancel` it and fail.
 
