@@ -288,9 +288,9 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+/* "A clean page." starts in line with the date above it (docs/UI.md). */
 .empty {
   margin: 0;
-  padding-left: var(--row);
   color: var(--ink-muted);
   font-style: italic;
 }

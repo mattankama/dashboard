@@ -21,7 +21,7 @@ Options page: https://claude.ai/artifact/4XDzBZaW3WPE2JxbcbraZa
 - **No categories in the UI.** The API's optional `category` field stays but the UI never sets it, so the sheet's fallback is one list.
 - **Top of the page: today's date,** like a planner page (e.g. "Sunday, October 11").
 - **Spacing:** one blank dot row between items, so every item has a finger-sized tap area.
-- **Placeholder:** "Worth remembering…". **Empty page:** "A clean page."
+- **Placeholder:** "Worth remembering…". **Empty page:** "A clean page.", starting in line with the date (Mattan, 2026-10-12; it used to line up with item text instead).
 - **Laptop:** a phone-width page centered in the window, with plain darker space (`#13100d`) around it.
 - **Editing:** tap an item to edit its text in place. Return or tapping elsewhere saves; Esc cancels. No Save button. On a laptop, the quiet words "Pin" (or "Unpin") and "Archive" appear under it.
 - **Swipes (phone, today's page):** left archives, right pins or unpins. Nothing is revealed; the item follows the finger. _(How far it has to go, and what it shows: see 2026-10-12 below.)_
