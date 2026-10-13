@@ -103,6 +103,6 @@ export async function makePdf(
     last = sheet;
   }
   if (twoPages) return twoPages;
-  log.warn(`the sheet needs ${last!.pages} pages even at 10pt; printing it anyway`);
+  log.warn(`the sheet needs ${last!.pages} pages even at ${FIT_LEVELS.at(-1)!.itemPt}pt; printing it anyway`);
   return last!;
 }

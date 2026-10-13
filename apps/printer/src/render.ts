@@ -8,14 +8,19 @@ export interface Fit {
   space: number; // multiplies every vertical gap
 }
 
-/** Tried in order until the sheet fits: spacing tightens first, then type shrinks (never below 10pt). */
+/** Every text size on the sheet, 1.5 times the original design (Mattan, 2026-10-12). */
+export const TEXT_SCALE = 1.5;
+
+const pt = (size: number) => `${size * TEXT_SCALE}pt`;
+
+/** Tried in order until the sheet fits: spacing tightens first, then type shrinks (never below 10pt × TEXT_SCALE). */
 export const FIT_LEVELS: Fit[] = [
   { itemPt: 12, headingPt: 13.5, space: 1 },
   { itemPt: 12, headingPt: 13.5, space: 0.6 },
   { itemPt: 11, headingPt: 12.5, space: 0.5 },
   { itemPt: 10.5, headingPt: 12, space: 0.4 },
   { itemPt: 10, headingPt: 11.5, space: 0.35 },
-];
+].map((fit) => ({ ...fit, itemPt: fit.itemPt * TEXT_SCALE, headingPt: fit.headingPt * TEXT_SCALE }));
 
 export interface SheetLabels {
   range: string; // "Oct 11 – Oct 17, 2026"
@@ -64,8 +69,8 @@ header {
   align-items: baseline;
   margin-bottom: ${(1.2 * fit.space).toFixed(2)}em;
 }
-h1 { margin: 0; font-size: 20pt; font-weight: 700; }
-.range { font-size: 11pt; }
+h1 { margin: 0; font-size: ${pt(20)}; font-weight: 700; }
+.range { font-size: ${pt(11)}; }
 section { margin-top: ${(1.3 * fit.space).toFixed(2)}em; }
 h2 {
   margin: 0 0 ${(0.35 * fit.space).toFixed(2)}em;
@@ -84,7 +89,7 @@ li {
 }
 .pinned .mark { font-size: 0.85em; line-height: 1.6; }
 .text { white-space: pre-wrap; overflow-wrap: anywhere; }
-footer { margin-top: ${(1.8 * fit.space).toFixed(2)}em; font-size: 9pt; }
+footer { margin-top: ${(1.8 * fit.space).toFixed(2)}em; font-size: ${pt(9)}; }
 </style>
 </head>
 <body>

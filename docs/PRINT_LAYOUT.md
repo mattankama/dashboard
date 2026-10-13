@@ -6,7 +6,7 @@ The sheet should feel calm and easy to read, like a list on the fridge, not a re
 
 - US Letter, portrait, about 0.75in margins.
 - **Black and white only.** The MF4800 is a mono laser printer, so use no color and no gray fills that print muddy.
-- One page is the target and two pages the maximum. If items overflow, shrink spacing first, then font size (no smaller than 10pt).
+- One page is the target and two pages the maximum. If items overflow, shrink spacing first, then font size (no smaller than 15pt).
 
 ## Content, top to bottom
 
@@ -23,5 +23,5 @@ No AI commentary, summaries, "focus" lines, staleness markers, checkboxes or QR 
 
 ## Typography
 
-- One readable serif or system font, with item text around 11–12pt and headings around 13pt in semibold.
+- One readable serif or system font, with item text around 18pt and headings around 20pt in semibold. **Every size on the sheet is 1.5 times the original design** (items were 12pt, headings 13.5pt, the title 20pt; Mattan, 2026-10-12). `TEXT_SCALE` in `apps/printer/src/render.ts` sets it.
 - Use a thin rule under each group heading. Avoid heavy borders and boxes.

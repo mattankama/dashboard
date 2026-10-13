@@ -23,7 +23,8 @@ _Last updated: 2026-10-12_
   - swipes use Touch Events and act on a flick or past 40%, with a cue on the item's mark, a spring back, items gliding into gaps, and pinned items sliding to the top.
   - follow-up the same day: adding shows the item at once (no wait for the server), and a tap on a field that's focused with no keyboard no longer slides the page; the bar above the keyboard can't be removed by a web page (`docs/DECISIONS.md`);
   - Checked in headless Chrome with real touch input: swipes, the cue, smooth moves, edges, catching an item mid-spring, the archive view, a faked keyboard, the laptop words, and no CSP violations. All of it is **deployed** (2026-10-12, Mattan's OK, version `d3e6ea51`, which also lines up "A clean page." with the date). The live site serves the new files and still answers `401` without a session. Nothing has been tried on an iPhone yet.
-- **Tests:** 116 in `apps/web`, 124 in `apps/printer`.
+- **First real print, 2026-10-12** (Mattan asked): this week's sheet, from the deployed app's 3 items, printed on the Canon with `lp` only. No email, no week marker, no recorded run, so the real job still runs for this week. Then, at Mattan's request, every text size on the sheet became 1.5 times larger (`TEXT_SCALE`; `docs/PRINT_LAYOUT.md`).
+- **Tests:** 116 in `apps/web`, 125 in `apps/printer`.
 - **Security review, 2026-10-12** (`security-and-hardening`): no injection, XSS or sign-in bypass found; `npm audit` clean in both apps; no secrets in git history. The deployed app sends its CSP and refuses requests without a session (`401`) or the printer token (`401`); `workers.dev` is HSTS-preloaded. `apps/printer/.env` is now readable only by Mattan (`chmod 600`). One open item: the printer token (step 7).
 
 ## Next task

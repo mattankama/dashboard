@@ -42,24 +42,24 @@ describe("makePdf with the real Chrome", { skip: noChrome }, () => {
     assert.equal(result.pdf.subarray(0, 5).toString("latin1"), "%PDF-");
   });
 
-  // Measured with Charter on this Mac: one-line items fit about 26 to a page at the
-  // roomiest level and about 40 at 10pt.
+  // Measured with Charter on this Mac, with text at 1.5× (TEXT_SCALE): one-line items
+  // fit about 16 to a page at the roomiest level and about 24 at 15pt.
   it("tightens spacing first to keep a longer list on one page", async () => {
-    const result = await makePdf([{ heading: "All", items: items(28, 1) }], LABELS, { chromePath: CHROME, run, log: memoryLogger() });
+    const result = await makePdf([{ heading: "All", items: items(18, 1) }], LABELS, { chromePath: CHROME, run, log: memoryLogger() });
 
     assert.equal(result.pages, 1);
     assert.equal(result.level, 1, "spacing only, type unchanged");
   });
 
   it("then shrinks the type to stay on one page", async () => {
-    const result = await makePdf([{ heading: "All", items: items(36, 1) }], LABELS, { chromePath: CHROME, run, log: memoryLogger() });
+    const result = await makePdf([{ heading: "All", items: items(22, 1) }], LABELS, { chromePath: CHROME, run, log: memoryLogger() });
 
     assert.equal(result.pages, 1);
     assert.ok(result.level >= 2, "smaller type");
   });
 
   it("uses the roomiest two-page layout when one page is impossible", async () => {
-    const result = await makePdf([{ heading: "All", items: items(42, 1) }], LABELS, { chromePath: CHROME, run, log: memoryLogger() });
+    const result = await makePdf([{ heading: "All", items: items(30, 1) }], LABELS, { chromePath: CHROME, run, log: memoryLogger() });
 
     assert.equal(result.pages, 2);
     assert.equal(result.level, 0);

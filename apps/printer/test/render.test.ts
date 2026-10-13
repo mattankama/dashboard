@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Item } from "../src/api.ts";
 import type { Group } from "../src/group.ts";
-import { FIT_LEVELS, renderSheet } from "../src/render.ts";
+import { FIT_LEVELS, TEXT_SCALE, renderSheet } from "../src/render.ts";
 
 function item(id: string, text: string, pinned = false): Item {
   return { id, text, category: null, pinned, createdAt: "", updatedAt: "", archivedAt: null };
@@ -71,17 +71,27 @@ describe("renderSheet", () => {
 });
 
 describe("FIT_LEVELS", () => {
-  it("tighten spacing before shrinking type, never below 10pt", () => {
+  it("tighten spacing before shrinking type, never below 10pt × TEXT_SCALE", () => {
     const [first, second, ...rest] = FIT_LEVELS;
 
     assert.equal(second.itemPt, first.itemPt, "the second level only tightens spacing");
     assert.ok(second.space < first.space);
     for (const level of rest) assert.ok(level.itemPt < first.itemPt);
-    assert.equal(Math.min(...FIT_LEVELS.map((l) => l.itemPt)), 10);
+    assert.equal(Math.min(...FIT_LEVELS.map((l) => l.itemPt)), 10 * TEXT_SCALE);
   });
 
   it("feed the sizes into the sheet", () => {
     const html = render(GROUPS, FIT_LEVELS[FIT_LEVELS.length - 1]);
-    assert.match(html, /font-size: 10pt/);
+    assert.match(html, /body \{[^}]*font-size: 15pt/);
+  });
+
+  it("print every text 1.5 times the original design", () => {
+    assert.equal(TEXT_SCALE, 1.5);
+    const html = render();
+    assert.match(html, /body \{[^}]*font-size: 18pt/, "items: 12pt × 1.5");
+    assert.match(html, /h1 \{[^}]*font-size: 30pt/, "title: 20pt × 1.5");
+    assert.match(html, /\.range \{ font-size: 16.5pt/, "dates: 11pt × 1.5");
+    assert.match(html, /h2 \{[^}]*font-size: 20.25pt/, "headings: 13.5pt × 1.5");
+    assert.match(html, /footer \{[^}]*font-size: 13.5pt/, "footer: 9pt × 1.5");
   });
 });

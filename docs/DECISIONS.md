@@ -87,3 +87,6 @@ Mattan noticed a lag between pressing Return and the item appearing: it waited f
 
 ### 2026-10-12: The bar above the iPhone keyboard stays
 Mattan asked to remove the ˄ ˅ ✓ bar. A web page can't. In WebKit's source (`WKContentViewInteraction.mm`, `_elementTypeRequiresAccessoryView`), every text field, text area and editable area gets it on a small screen. The only off switch, `accessoryViewShouldNotShow`, belongs to a native app that embeds WebKit. A native wrapper would be a new moving part (an Xcode project, signing, updates), so it isn't worth it for this. The page already sits the add field on top of the bar.
+
+### 2026-10-12: The printed sheet's text is 1.5 times larger
+After the first real print, Mattan asked for every text size on the sheet to be 1.5 times larger. `TEXT_SCALE` in `apps/printer/src/render.ts` multiplies them all: items now 18pt, headings 20.25pt, the title 30pt. The overflow ladder scales too, so the sheet never shrinks below 15pt. The cost is space. One page now holds about 16 one-line items (it held about 26), and two pages about 50. A longer list still prints, on more pages, with a warning in the log.

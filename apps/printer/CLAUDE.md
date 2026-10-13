@@ -36,6 +36,6 @@ npm run weekly                  # the real run: prints and emails when due (laun
 - **Chrome 154 doesn't exit after `--print-to-pdf` when it has its own profile.** `pdf.ts` waits for the finished file (`%%EOF`, no longer growing), then stops Chrome.
 - **`dns-sd` never exits.** It gets 3 seconds, then its output is read. So `printerStatus` takes about 3 seconds.
 - **Claude only groups** (`CLAUDE.md`). Its answer is used only if every id appears exactly once with short headings; otherwise the fallback. Item text never goes in logs or email bodies.
-- **Fit levels were measured** with Charter on this Mac: about 26 one-line items fit a page at the roomiest level, and about 40 at 10pt (`test/pdf.test.ts`).
+- **Fit levels were measured** with Charter on this Mac, with text at 1.5× (`TEXT_SCALE` in `render.ts`): about 16 one-line items fit a page at the roomiest level, and about 24 at 15pt. Two pages hold about 50 (`test/pdf.test.ts`). Changing `TEXT_SCALE` means re-measuring those tests.
 - **Under launchd** there's no terminal, so log lines only go to the log file; `~/Library/Logs/dashboard.launchd.log` only catches crashes. After a Node upgrade, re-run `install.sh` (the job holds Node's full path).
 - **The job only needs `PRINTER_TOKEN`** to reach the web app. The app's sign-in password is for people, and the printer routes don't check it.
