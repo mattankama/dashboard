@@ -17,11 +17,26 @@ _Last updated: 2026-10-12_
   - the sign-in screen Mattan chose;
   - security headers for the API and the page;
   - the Access check and the Mac's service token are gone.
-- **Tests:** 102 in `apps/web`, 124 in `apps/printer`.
+- **Phone UI fixes, 2026-10-12** (Mattan's report: the keyboard pushed the page up, a dark strip at the bottom on launch, swipes worked poorly). Researched first; Mattan chose the swipe cue and motion (`docs/UI.md`, sources in `docs/DECISIONS.md`):
+  - the page no longer moves when the keyboard opens: the add field rides up on it (`keyboard.js`);
+  - the Home Screen app is sized from `lvh`, and the page colour is behind everything on phones;
+  - swipes use Touch Events and act on a flick or past 40%, with a cue on the item's mark, a spring back, items gliding into gaps, and pinned items sliding to the top.
+  - follow-up the same day: adding shows the item at once (no wait for the server), and a tap on a field that's focused with no keyboard no longer slides the page; the bar above the keyboard can't be removed by a web page (`docs/DECISIONS.md`);
+  - Checked in headless Chrome with real touch input: swipes, the cue, smooth moves, edges, catching an item mid-spring, the archive view, a faked keyboard, the laptop words, and no CSP violations. The first round is **deployed** (2026-10-12, Mattan's OK, version `8de17fa9`; the live site serves the new files and still answers `401` without a session). The follow-up (instant adding, the refocus fix) is committed but **not deployed yet**. Nothing has been tried on an iPhone yet.
+- **Tests:** 116 in `apps/web`, 124 in `apps/printer`.
+- **Security review, 2026-10-12** (`security-and-hardening`): no injection, XSS or sign-in bypass found; `npm audit` clean in both apps; no secrets in git history. The deployed app sends its CSP and refuses requests without a session (`401`) or the printer token (`401`); `workers.dev` is HSTS-preloaded. `apps/printer/.env` is now readable only by Mattan (`chmod 600`). One open item: the printer token (step 7).
 
 ## Next task
 
-**Mattan: `docs/SETUP.md` step 5 (the password), then step 6.** Then the first unattended Sunday, with `shipping-and-launch`: watch `npm run status`, the log, and the first emailed sheet.
+**Mattan: check the phone UI fixes on the iPhone**, from the Home Screen app (no need to re-add it; force-quit and reopen loads the new files):
+1. Force-quit, then open it: no dark strip at the bottom, before or after scrolling.
+2. Tap the add field: the date and items don't move, the field rides up on the keyboard with no gap, and nothing flickers. Close the keyboard: nothing is left out of place.
+3. Edit an item low on the page: it ends up just above the add field. Type several lines in both fields.
+   Add a few items in a row: each shows the moment Return is pressed. Close the keyboard, then tap the add field again: no glitch.
+4. With the keyboard open, drag the list (short and long) and the add field: the page itself doesn't move.
+5. Swipes: a quick flick and a slow drag both ways; watch the ★ and dimming appear at the point of no return; let go early; catch an item as it springs back; scroll the list starting on an item; the archive view.
+
+If 1 or 2 fails, `docs/DECISIONS.md` (2026-10-12) lists the fallbacks. Then **`docs/SETUP.md` step 5 (the password), then step 6**, and the first unattended Sunday, with `shipping-and-launch`: watch `npm run status`, the log, and the first emailed sheet.
 
 ## Checklist: inputs and actions needed from Mattan
 
@@ -30,8 +45,9 @@ _Last updated: 2026-10-12_
 - [x] 2. Gmail app password → `apps/printer/.env` (`GMAIL_USER`, `GMAIL_APP_PASSWORD`, `NOTIFY_TO`). Set; the first real email (step 6) tests it.
 - [ ] 3. Optional: Anthropic API key → `ANTHROPIC_API_KEY` (a few cents a week; otherwise one plain list).
 - [x] 4. Cloudflare: account, `wrangler login`, `npm run deploy`, `npm run db:migrate:remote`, printer token. On 2026-10-12 `npm run status` reached the deployed app's printer route (0 items).
-- [ ] 5. Your password: `npm run deploy` again, `LOGIN_PASSWORD` and `SESSION_SECRET` with `npx wrangler secret put`, then sign in on the phone and Add to Home Screen. No card and no Zero Trust.
+- [ ] 5. Your password: `npm run deploy` again, `LOGIN_PASSWORD` and `SESSION_SECRET` with `npx wrangler secret put`, then sign in on the phone and Add to Home Screen. No card and no Zero Trust. (On 2026-10-12 the deployed API answered "Sign in", not "Login isn't set up", so both secrets are set.)
 - [ ] 6. On the Mac: `npm run status`, a test print (`npm run weekly -- --force`), `./install.sh`, allow notifications. Optionally, the `pmset` Sunday wake. (On 2026-10-12 the printer didn't answer on the network; it needs to be on for this.)
+- [ ] 7. A new printer token: the one in `apps/printer/.env` is 16 characters, not the 64 that `docs/SETUP.md` step 4 makes. It reads every active item without the password. Make one with `openssl rand -hex 32`, then `npx wrangler secret put PRINTER_TOKEN` and the same value in `.env`; `npm run status` confirms it. (Proposed after this: the Worker refuses a `PRINTER_TOKEN` under 32 characters, like the other two secrets. Awaiting Mattan's OK.)
 
 **Decisions to confirm** (assumptions made while you were away)
 - [ ] **Catch-up:** a missed Sunday prints at the next run at home; older missed weeks are skipped. Installing marks the current week done, so it never prints by surprise.
