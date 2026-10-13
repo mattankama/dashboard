@@ -21,7 +21,7 @@ Deploying needs Mattan's OK and account: `npm run deploy` and `npm run db:migrat
 - `src/index.ts`: URLPattern router. `/api/*` runs here (`run_worker_first`); everything else is `public/`.
 - `src/auth.ts`: signing in and the session check. `src/items.ts`, `src/printer.ts`: route handlers. `src/validate.ts`: pure input checks. `src/db.ts`: all SQL, always bound.
 - `public/_headers`: the CSP and other headers for the app's files (API replies get theirs in `src/index.ts`).
-- `public/`: the UI. No framework, no build step. `app.js` and `swipe.js` are `// @ts-check` JS; pure helpers in `lib.js` are unit-tested.
+- `public/`: the UI. No framework, no build step. `app.js`, `swipe.js` (swipes, and items sliding to new places) and `keyboard.js` (the iPhone keyboard) are `// @ts-check` JS; pure helpers in `lib.js` (including the swipe thresholds and spring) are unit-tested.
 - `migrations/`: D1 schema. Changing it needs Mattan's OK.
 
 ## Gotchas
@@ -35,4 +35,9 @@ Deploying needs Mattan's OK and account: `npm run deploy` and `npm run db:migrat
 - **Phone vs laptop** is decided by `(hover: hover) and (pointer: fine)`. Phone actions are swipes; laptop actions are words on tap.
 - **A delete is sent only when its undo line goes away**, or the view flips, or the page hides (`keepalive`).
 - **npm 12 blocks install scripts** (workerd, esbuild). Their binaries still work; look here first if `wrangler dev` won't start.
-- **Checking the UI:** `npm run dev`, then Chrome's device toolbar for phone size (a mouse drag acts as a finger there). Phase 1 drove headless Chrome over the DevTools protocol with throwaway scripts (not in the repo).
+- **Checking the UI:** `npm run dev`, then Chrome's device toolbar for phone size. Swipes are Touch Events, so use touch emulation: a mouse drag does nothing. Headless Chrome over the DevTools protocol with `Input.dispatchTouchEvent` works well (throwaway scripts, not in the repo). Chrome holds back `touchmove`s inside its ~15px slop, so test drags should move further than that.
+- **The page never scrolls; `#scroller` does.** `.page` is fixed to the screen, so the keyboard can't push it up (`docs/DECISIONS.md`). Scroll positions, `scrollIntoView` and the like act on `#scroller`.
+- **Focus fields with `focusInPlace()`** (`keyboard.js`), not `.focus()`, or Safari slides the page up to the field.
+- **The iPhone keyboard can't be tried in Chrome.** To check the layout, fake it: redefine `visualViewport.height` (e.g. 500) and dispatch a `resize` on `visualViewport` while a field is focused. Whether Safari really stays put, and the launch strip, need a real iPhone (checks in `docs/STATUS.md`).
+- **New items show before the server answers**, with an `unsaved-…` id (the `unsaved` set in `app.js`); taps and swipes ignore them until the server's copy replaces them.
+- **The list isn't rebuilt while a finger is on an item** (`swipe.busy()`); `render()` waits and runs when the touch ends. Rebuild only through `render()`/`renderRow()`, and wrap changes that move items in `moveSmoothly()`.

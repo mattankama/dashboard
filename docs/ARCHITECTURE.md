@@ -76,7 +76,7 @@ A wrong or missing token gets `401`; if `PRINTER_TOKEN` isn't set the routes ret
 
 ## UI (`apps/web/public`)
 
-Static HTML, CSS and `// @ts-check` JavaScript, no framework or build step. Phone-first: actions are swipes on the phone and words on a laptop. Every design choice is Mattan's and lives in `docs/UI.md`.
+Static HTML, CSS and `// @ts-check` JavaScript, no framework or build step. Phone-first: actions are swipes on the phone (`swipe.js`, Touch Events) and words on a laptop. The page is fixed to the screen and the list scrolls inside it, so the iPhone keyboard covers the bottom of the page instead of sliding it up (`keyboard.js`). Every design choice is Mattan's and lives in `docs/UI.md`.
 
 ## Weekly job (`apps/printer`)
 

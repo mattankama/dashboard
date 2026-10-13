@@ -60,13 +60,87 @@ export function editPatch(item, draft, extra = {}) {
 }
 
 /**
- * A swipe acts once the item has been dragged at least halfway, either way.
+ * How far and how fast a swipe has to go to act (docs/UI.md). Sources for the
+ * numbers are in docs/DECISIONS.md.
+ */
+export const SWIPE = {
+  /** Past this share of the item's width, letting go acts (the item shows it)... */
+  distance: 0.4,
+  /** ...until it's dragged back under this share, so the cue doesn't flicker. */
+  disarm: 0.34,
+  /** A flick acts at this speed (px/ms) in its direction... */
+  flickSpeed: 0.4,
+  /** ...once it has gone this far (px). */
+  flickMin: 32,
+  /** The speed is measured over this many ms before letting go... */
+  window: 100,
+  /** ...and is zero if the finger stopped for this long first. */
+  stopped: 40,
+};
+
+/**
+ * Whether letting go now would act, going by distance alone.
  * @param {number} dx  horizontal drag distance in px (negative = left)
  * @param {number} width  the item's width in px
+ * @param {boolean} wasArmed  whether it was armed a moment ago
+ */
+export function armed(dx, width, wasArmed) {
+  return Math.abs(dx) >= (wasArmed ? SWIPE.disarm : SWIPE.distance) * width;
+}
+
+/**
+ * What letting go of a swiped item does. It acts when armed (dragged far enough)
+ * or flicked fast enough; a finger heading back as it lets go always cancels.
+ * @param {number} dx  horizontal drag distance in px (negative = left)
+ * @param {number} speed  the finger's speed as it let go, px/ms (negative = left)
+ * @param {boolean} isArmed  see `armed`
  * @returns {"left" | "right" | "back"}
  */
-export function swipeOutcome(dx, width) {
-  if (dx <= -width / 2) return "left";
-  if (dx >= width / 2) return "right";
+export function swipeOutcome(dx, speed, isArmed) {
+  if (dx === 0) return "back";
+  const way = dx < 0 ? "left" : "right";
+  const onward = Math.sign(dx) * speed; // negative when heading back
+  if (onward <= -SWIPE.flickSpeed) return "back";
+  if (isArmed) return way;
+  if (onward >= SWIPE.flickSpeed && Math.abs(dx) >= SWIPE.flickMin) return way;
   return "back";
+}
+
+/**
+ * The slide back to rest as a critically damped spring (no bounce, like iOS),
+ * written as a CSS `linear()` easing. A finger already heading back carries its
+ * speed into the slide, capped so the item can never overshoot.
+ * @param {number} x0  where the item is, px from rest
+ * @param {number} v0  the finger's speed as it let go, px/ms (same sign convention)
+ * @returns {{ easing: string, duration: number }}
+ */
+export function springBack(x0, v0) {
+  const omega = (2 * Math.PI) / 300; // a 300ms spring (Apple's default is 500ms)
+  if (Math.abs(x0) < 0.5) return { easing: "linear", duration: 0 };
+  // Speed toward rest as a share of the distance per ms (<= 0), capped at omega.
+  const u = Math.max(-omega, Math.min(0, v0 / x0));
+  /** @param {number} t */
+  const left = (t) => (1 + (omega + u) * t) * Math.exp(-omega * t); // share of x0 still to go
+  let duration = 1;
+  while (duration < 500 && Math.abs(x0) * left(duration) >= 0.5) duration++;
+  const steps = 20;
+  const points = [];
+  for (let i = 0; i <= steps; i++) {
+    const p = i === steps ? 1 : 1 - left((duration * i) / steps);
+    points.push(Number(p.toFixed(4)));
+  }
+  return { easing: `linear(${points.join(", ")})`, duration };
+}
+
+/**
+ * The finger's horizontal speed as it let go, in px/ms, from its last moves.
+ * @param {{ x: number, t: number }[]} moves  oldest first
+ * @param {number} now  when it let go (same clock as `t`)
+ */
+export function releaseSpeed(moves, now) {
+  const recent = moves.filter((m) => now - m.t <= SWIPE.window);
+  const first = recent[0];
+  const last = recent[recent.length - 1];
+  if (!first || !last || last === first || now - last.t > SWIPE.stopped) return 0;
+  return (last.x - first.x) / (last.t - first.t);
 }

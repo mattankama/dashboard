@@ -1,12 +1,16 @@
 // @ts-check
+import { focusInPlace, focusOnTap, followKeyboard } from "./keyboard.js";
 import { compareArchived, compareItems, editPatch, formatDay, isoDay } from "./lib.js";
-import { enableSwipe } from "./swipe.js";
+import { enableSwipe, moveSmoothly } from "./swipe.js";
 
 /** @typedef {import("./lib.js").Item} Item */
 /** @typedef {{ text?: string, pinned?: boolean, archived?: boolean }} Patch */
 /** @typedef {"active" | "archived"} View */
 
 const UNDO_MS = 5000;
+// How long items take to close a gap, and to move to a new place (docs/UI.md).
+const CLOSE_MS = 200;
+const MOVE_MS = 250;
 // A mouse or trackpad: no swiping, so actions are words; focus can move without popping a keyboard.
 const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
 
@@ -20,6 +24,7 @@ function byId(id) {
 }
 
 const page = /** @type {HTMLElement} */ (document.querySelector(".page"));
+const scroller = byId("scroller");
 const flip = /** @type {HTMLButtonElement} */ (byId("flip"));
 const flipLabel = byId("flip-label");
 const today = /** @type {HTMLTimeElement} */ (byId("today"));
@@ -43,7 +48,8 @@ let view = "active";
 /** @type {Item[]} */
 let items = [];
 let loaded = false;
-let saving = false;
+/** Items added here that the server hasn't answered for yet: shown, but not yet editable. */
+const unsaved = new Set();
 /** The server wants the password: the page shows nothing but the date and the password field. */
 let signedOut = false;
 let signingIn = false;
@@ -59,6 +65,8 @@ let selectedId = null;
 let pendingUndo = null;
 /** True while the list is being rebuilt, so focus changes it causes are ignored. */
 let rendering = false;
+/** A rebuild put off while a finger is on an item (see `swipe.busy`). */
+let renderWaiting = false;
 
 /** An error the API answered with, as opposed to a network failure. */
 class ApiError extends Error {}
@@ -247,6 +255,12 @@ function sizeToContent(area) {
 
 /** Rebuilds the list, keeping the editor's focus and caret if it had them. */
 function render() {
+  // Not under a finger: the item being swiped would be lost. It happens after.
+  if (swipe.busy()) {
+    renderWaiting = true;
+    return;
+  }
+  renderWaiting = false;
   const active = editArea();
   const selection = active && document.activeElement === active ? [active.selectionStart, active.selectionEnd] : null;
 
@@ -260,7 +274,7 @@ function render() {
   if (area) {
     sizeToContent(area);
     if (selection) {
-      area.focus();
+      focusInPlace(area);
       area.setSelectionRange(selection[0], selection[1]);
     }
   }
@@ -272,6 +286,10 @@ function render() {
  * @param {string} id
  */
 function renderRow(id) {
+  if (swipe.busy()) {
+    renderWaiting = true;
+    return;
+  }
   const li = list.querySelector(`[data-id="${CSS.escape(id)}"]`);
   const item = items.find((i) => i.id === id);
   if (!li || !item) return;
@@ -317,7 +335,7 @@ function openEditor(id) {
   render();
   const area = editArea();
   if (area) {
-    area.focus();
+    focusInPlace(area); // the keyboard opens without the page sliding up
     area.setSelectionRange(area.value.length, area.value.length);
   }
 }
@@ -357,13 +375,20 @@ function commitEdit(extra = {}, refocus = false) {
     return;
   }
 
-  putItem({
+  const edited = {
     ...original,
     ...(patch.text === undefined ? {} : { text: patch.text.trim() }),
     ...(patch.pinned === undefined ? {} : { pinned: patch.pinned }),
-  });
-  if (patch.pinned === undefined) renderRow(original.id);
-  else render();
+  };
+  if (patch.pinned === undefined) {
+    putItem(edited);
+    renderRow(original.id);
+  } else {
+    moveSmoothly(list, MOVE_MS, () => {
+      putItem(edited);
+      render();
+    });
+  }
   if (refocus) focusItem(original.id);
 
   patchItem(original.id, patch).then(
@@ -389,13 +414,17 @@ function commitEdit(extra = {}, refocus = false) {
  */
 function togglePin(item) {
   const pinned = !item.pinned;
-  putItem({ ...item, pinned });
-  render();
+  moveSmoothly(list, MOVE_MS, () => {
+    putItem({ ...item, pinned });
+    render();
+  });
   patchItem(item.id, { pinned }).then(
     ({ item: saved }) => putItem(saved),
     (err) => {
-      putItem(item);
-      render();
+      moveSmoothly(list, MOVE_MS, () => {
+        putItem(item);
+        render();
+      });
       showNotice(`Couldn't ${pinned ? "pin" : "unpin"} that item. ${describe(err)}`);
     },
   );
@@ -478,14 +507,18 @@ function resumeUndo() {
  * @param {string} failure  for the notice if the server refuses
  */
 function move(item, patch, label, failure) {
-  dropItem(item.id);
-  render();
+  moveSmoothly(list, CLOSE_MS, () => {
+    dropItem(item.id);
+    render();
+  });
   const request = patchItem(item.id, patch).then(
     () => true,
     (err) => {
       dropUndo(item.id);
-      putItem(item);
-      render();
+      moveSmoothly(list, CLOSE_MS, () => {
+        putItem(item);
+        render();
+      });
       showNotice(`${failure} ${describe(err)}`);
       return false;
     },
@@ -495,8 +528,10 @@ function move(item, patch, label, failure) {
     if (!(await request)) return;
     try {
       const { item: moved } = await patchItem(item.id, { archived: !patch.archived });
-      putItem(moved);
-      render();
+      moveSmoothly(list, CLOSE_MS, () => {
+        putItem(moved);
+        render();
+      });
       if (refocus) focusItem(moved.id);
       hideNotice();
     } catch (err) {
@@ -523,14 +558,18 @@ function restore(item) {
  * @param {Item} item
  */
 function remove(item) {
-  dropItem(item.id);
-  render();
+  moveSmoothly(list, CLOSE_MS, () => {
+    dropItem(item.id);
+    render();
+  });
   offerUndo(
     "Deleted",
     item.id,
     (refocus) => {
-      putItem(item);
-      render();
+      moveSmoothly(list, CLOSE_MS, () => {
+        putItem(item);
+        render();
+      });
       if (refocus) focusItem(item.id);
     },
     () => {
@@ -620,7 +659,7 @@ signInForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (signingIn) return;
   if (password.value === "") {
-    password.focus();
+    focusInPlace(password);
     return;
   }
 
@@ -649,36 +688,54 @@ password.addEventListener("change", syncPassword);
 
 /** Enables the save arrow only when there's text, and grows the field with it. */
 function syncField() {
-  save.disabled = saving || field.value.trim() === "";
+  save.disabled = field.value.trim() === "";
   sizeToContent(field);
 }
 
-form.addEventListener("submit", async (event) => {
+// A new item shows at once and the field is ready for the next one; the server's
+// copy takes its place when it answers. If the server refuses it, it goes away
+// again and its words come back to the field.
+form.addEventListener("submit", (event) => {
   event.preventDefault();
   const text = field.value;
-  if (saving || text.trim() === "") return;
+  if (text.trim() === "") return;
 
-  saving = true;
+  const now = new Date().toISOString();
+  /** @type {Item} */
+  const shown = { id: `unsaved-${crypto.randomUUID()}`, text: text.trim(), category: null, pinned: false, createdAt: now, updatedAt: now, archivedAt: null };
+  unsaved.add(shown.id);
+  putItem(shown);
+  render();
+  list.querySelector(`[data-id="${CSS.escape(shown.id)}"]`)?.scrollIntoView({ block: "nearest" });
+  hideNotice();
+  field.value = "";
   syncField();
-  try {
-    const { item } = await api("/api/items", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-    putItem(item);
-    render();
-    list.querySelector(`[data-id="${CSS.escape(item.id)}"]`)?.scrollIntoView({ block: "nearest" });
-    hideNotice();
-    // Keep anything typed while the request was in flight.
-    if (field.value === text) field.value = "";
-  } catch (err) {
-    showNotice(`Couldn't save. ${describe(err)}`);
-  } finally {
-    saving = false;
-    syncField();
-    field.focus();
-  }
+  // With a mouse, the arrow may have taken focus. (A phone's field keeps it.)
+  if (finePointer.matches) field.focus();
+
+  api("/api/items", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  }).then(
+    ({ item }) => {
+      unsaved.delete(shown.id);
+      dropItem(shown.id);
+      putItem(item);
+      render();
+    },
+    (err) => {
+      unsaved.delete(shown.id);
+      dropItem(shown.id);
+      render();
+      // Give the words back, unless something new is being typed.
+      if (field.value === "") {
+        field.value = text;
+        syncField();
+      }
+      showNotice(`Couldn't save. ${describe(err)}`);
+    },
+  );
 });
 
 // Return saves; Shift+Return starts a new line.
@@ -698,7 +755,7 @@ field.addEventListener("input", syncField);
  */
 function onItem(act) {
   return (id) => {
-    const item = items.find((i) => i.id === id);
+    const item = unsaved.has(id) ? undefined : items.find((i) => i.id === id);
     if (item) act(item);
   };
 }
@@ -707,7 +764,7 @@ list.addEventListener("click", (event) => {
   const target = /** @type {Element} */ (event.target);
   const id = /** @type {HTMLElement | null} */ (target.closest(".item"))?.dataset.id;
   const item = items.find((i) => i.id === id);
-  if (!item) return;
+  if (!item || unsaved.has(item.id)) return; // still being saved: a moment more
   // detail is 0 when a key, not a pointer, pressed the button.
   const keyboard = event.detail === 0;
   const action = /** @type {HTMLElement | null} */ (target.closest(".word"))?.dataset.action;
@@ -768,16 +825,33 @@ list.addEventListener("focusout", (event) => {
 document.addEventListener("pointerdown", (event) => {
   const target = /** @type {Element} */ (event.target);
   // On iPhone, tapping a blank spot doesn't blur the text field, so do it here.
-  if (editingId !== null && !target.closest(".editing")) editArea()?.blur();
+  // (Tapping another field moves focus by itself, and keeps the keyboard up.)
+  if (editingId !== null && !target.closest(".editing, textarea, input")) editArea()?.blur();
   if (selectedId !== null && !target.closest(".selected")) select(null);
 });
 
-enableSwipe(list, (direction) => {
-  if (view === "active") {
-    return direction === "left" ? { leaves: true, run: onItem(archive) } : { leaves: false, run: onItem(togglePin) };
-  }
-  return direction === "left" ? { leaves: true, run: onItem(restore) } : { leaves: true, run: onItem(remove) };
-});
+/** @param {string} id */
+function pinCue(id) {
+  return items.find((i) => i.id === id)?.pinned ? "unpin" : "pin";
+}
+
+const swipe = enableSwipe(
+  list,
+  (direction, id) => {
+    if (unsaved.has(id)) return null; // still being saved: it stays put
+    if (view === "active") {
+      return direction === "left"
+        ? { leaves: true, cue: "dim", run: onItem(archive) }
+        : { leaves: false, cue: pinCue(id), run: onItem(togglePin) };
+    }
+    return direction === "left"
+      ? { leaves: true, cue: "dim", run: onItem(restore) }
+      : { leaves: true, cue: "dim", run: onItem(remove) };
+  },
+  () => {
+    if (renderWaiting) render();
+  },
+);
 
 flip.addEventListener("click", () => showView(view === "active" ? "archived" : "active"));
 
@@ -794,6 +868,11 @@ document.addEventListener("visibilitychange", () => {
   else settleUndo();
 });
 window.addEventListener("pagehide", settleUndo);
+
+// The keyboard covers the bottom of the page; nothing slides up (keyboard.js).
+focusOnTap(field);
+focusOnTap(password);
+followKeyboard(page, scroller);
 
 renderDate();
 syncField();

@@ -58,3 +58,32 @@ Turning on Zero Trust asked for a payment card and permission to charge usage be
 
 ### 2026-10-12: No rate limit on signing in, on purpose
 The Workers rate-limiting binding's terms on the free plan weren't confirmed, and a counter in D1 would change the schema. Instead the password must be at least 16 characters (the guide generates 24 random ones), and the free plan's 100,000 requests a day caps guessing far below what such a password would need. Wrong passwords are logged (without the password) in Workers Logs. Revisit if the password ever gets weaker or the app gets more users.
+
+### 2026-10-12: The page stays put when the iPhone keyboard opens
+On iPhone the keyboard covers the page instead of resizing it, and Safari slides the whole page up to show the focused field, which pushed the date and the items off the screen. Safari has nothing to change that: no `interactive-widget` (WebKit bug 259770), no VirtualKeyboard API (bug 230225), and `dvh`, `lvh` and `innerHeight` ignore the keyboard. It pans even with `overflow: hidden` (bug 240860). So the page never scrolls (a fixed page with the list scrolling inside it), and `public/keyboard.js` does two things:
+- It focuses fields "in place", moving the field out of sight for the moment of `focus()` so Safari finds nothing to scroll to, then putting it back. On the add and password fields that happens on the tap's `touchend`. This is Base UI's current approach, confirmed on iOS 26.5 and 27 (`DrawerVirtualKeyboardProvider`); react-aria and Ionic use variants of it.
+- It sizes the page to `visualViewport.height` while a field is focused. The change animates at about the keyboard's pace (260ms `cubic-bezier(.32,.72,0,1)`, Base UI's estimate).
+
+There are two backstops. If Safari pans anyway, the page is scrolled back. And the list is always 1px scrollable, because Safari lets a drag on content that can't scroll move the whole page (bug 243452). It can't be checked without an iPhone; the checks are in `docs/STATUS.md`. Fallbacks if it misbehaves there:
+- If the focus trick stops working, typing still works: Safari pans, and the page is scrolled back (a visible jump).
+- If the height animation stutters, move only the add field (a `transform`) and resize the list without animating it.
+- If the bar ends up short of the keyboard, `visualViewport.height` is wrong at launch too (the same bug as the strip below).
+
+### 2026-10-12: The installed app is sized from `lvh`
+On launch from the Home Screen, iOS 26 can report the viewport about a status bar short, so the page ended above the screen's bottom and the darker desk colour showed there until the first scroll. That's reported in several projects, with WebKit bugs 301108 and 316008 open. Installed, the page is sized from `100lvh` from the top (in standalone there's no browser bar, so the large viewport is the screen). On phone widths the page colour is also behind everything, so any gap left over can't be seen. Not chosen: dropping `black-translucent`, which is reported to help but changes the look and means re-adding the Home Screen icon.
+
+### 2026-10-12: Swipes use Touch Events, a flick or 40%, and a cue
+On iPhone a Pointer Events swipe with `touch-action: pan-y` can be turned into a vertical scroll halfway (WebKit bugs 203335 and 232545, both open). Only `preventDefault()` on a `touchmove` stops that, so `swipe.js` uses Touch Events (as Swiper, Embla, Ionic and Telegram Web do). The numbers:
+- Direction is decided after 10px: sideways if more than 1.2× as far across as down. Ionic uses 40°; Apple's WWDC18 session 803 uses 10pt.
+- It acts on a flick of at least 0.4px/ms over at least 32px (Vaul 0.4, use-gesture 0.5, Ionic 0.3), or a drag past 40% of the width (Flutter's `Dismissible`; Android uses 50%).
+- A flick back toward the start cancels (Flutter, Ionic, SwipeCellKit).
+- Speed comes from the last 100ms of moves, and is zero if the finger stopped for 40ms (Android's `VelocityTracker`).
+- Touches within 20px of the screen's sides are left to iOS (Telegram, Swiper).
+
+On release, an item that goes back follows a critically damped spring (Apple: "100% damping, or no overshoot"), written as a CSS `linear()` easing. Items that move slide there (FLIP) rather than jump. While a finger is on an item the list isn't rebuilt; it's rebuilt right after, because a touch stays with the element it started on. Mattan chose the cue and the motion (`docs/UI.md`).
+
+### 2026-10-12: Adding shows the item before the server answers
+Mattan noticed a lag between pressing Return and the item appearing: it waited for the round trip to the Worker and D1. Now the item shows at once, under a temporary id, and the server's copy replaces it when it answers. Until then it can't be edited or swiped, because the server doesn't know its id yet. A refused save takes it away and puts its words back in the field. The field also isn't focused from script after the request anymore. On iPhone that could leave it focused with no keyboard, and the next tap then went to Safari's own focus, which slides the page. Taps on a field in that state now go through `focusInPlace()` as well.
+
+### 2026-10-12: The bar above the iPhone keyboard stays
+Mattan asked to remove the ˄ ˅ ✓ bar. A web page can't. In WebKit's source (`WKContentViewInteraction.mm`, `_elementTypeRequiresAccessoryView`), every text field, text area and editable area gets it on a small screen. The only off switch, `accessoryViewShouldNotShow`, belongs to a native app that embeds WebKit. A native wrapper would be a new moving part (an Xcode project, signing, updates), so it isn't worth it for this. The page already sits the add field on top of the bar.

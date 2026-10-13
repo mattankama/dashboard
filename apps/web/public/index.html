@@ -17,18 +17,23 @@
   </head>
   <body>
     <div class="page">
-      <header class="head">
-        <h1>
-          <button id="flip" class="flip" type="button">
-            <span id="flip-label"><time id="today"></time></span>
-          </button>
-        </h1>
-      </header>
+      <!-- The page itself never scrolls; this does, date and all (see keyboard.js). -->
+      <div id="scroller" class="scroller">
+        <div class="scroll-content">
+          <header class="head">
+            <h1>
+              <button id="flip" class="flip" type="button">
+                <span id="flip-label"><time id="today"></time></span>
+              </button>
+            </h1>
+          </header>
 
-      <main class="sheet">
-        <p id="empty" class="empty" hidden>A clean page.</p>
-        <ul id="items" class="items" aria-label="Things to keep in mind"></ul>
-      </main>
+          <main class="sheet">
+            <p id="empty" class="empty" hidden>A clean page.</p>
+            <ul id="items" class="items" aria-label="Things to keep in mind"></ul>
+          </main>
+        </div>
+      </div>
 
       <footer class="bar">
         <div role="status">
